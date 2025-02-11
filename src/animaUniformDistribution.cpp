@@ -48,14 +48,15 @@ double UniformDistribution::GetCumulative(const ValueType &x)
 void UniformDistribution::Random(SampleType &sample, GeneratorType &generator)
 {
   RealUniformDistributionType unifDistr(0.0, 1.0);
-  ValueType sphCoords;
+  ValueType sphCoords, carCoords;
   sphCoords[2] = 1.0;
-  unsigned int nSamples = sample.size();
+  unsigned int nSamples = sample.n_rows;
   for (unsigned int i = 0; i < nSamples; ++i)
   {
     sphCoords[0] = 2.0 * std::asin(std::sqrt(unifDistr(generator)));
     sphCoords[1] = 2.0 * M_PI * unifDistr(generator);
-    anima::TransformSphericalToCartesianCoordinates(sphCoords, sample[i]);
+    anima::TransformSphericalToCartesianCoordinates(sphCoords, carCoords);
+    sample.row(i) = carCoords;
   }
 }
 

@@ -107,7 +107,7 @@ void VonMisesFisherDistribution::Fit(const SampleType &sample, const std::string
   meanDirection.fill(0.0);
   for (unsigned int i = 0; i < numberOfObservations; ++i)
     for (unsigned int j = 0; j < m_AmbientDimension; ++j)
-      meanDirection[j] += sample[i][j];
+      meanDirection[j] += sample(i, j);
   double normValue = arma::norm(meanDirection);
   meanDirection /= normValue;
   double resultantValue = normValue / static_cast<double>(numberOfObservations);
@@ -166,7 +166,7 @@ void VonMisesFisherDistribution::Random(SampleType &sample, GeneratorType &gener
     for (unsigned int i = 0; i < sampleSize; ++i)
     {
       this->SampleFromVMFDistributionNumericallyStable(sampleValue, generator);
-      sample[i] = sampleValue;
+      sample.row(i) = sampleValue;
     }
   }
   else
@@ -174,7 +174,7 @@ void VonMisesFisherDistribution::Random(SampleType &sample, GeneratorType &gener
     for (unsigned int i = 0; i < sampleSize; ++i)
     {
       this->SampleFromVMFDistribution(sampleValue, generator);
-      sample[i] = sampleValue;
+      sample.row(i) = sampleValue;
     }
   }
 }

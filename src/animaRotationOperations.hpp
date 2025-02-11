@@ -1,8 +1,11 @@
+#pragma once
+
 #include "animaRotationOperations.h"
 
 namespace anima {
 
-void pairingToQuaternion(const arma::vec3 &inputPoint, const arma::vec3 &inputTransformedPoint, arma::mat44 &outputMatrix)
+template <class VectorType>
+void pairingToQuaternion(const VectorType &inputPoint, const VectorType &inputTransformedPoint, arma::mat44 &outputMatrix)
 {
   outputMatrix.fill(0.0);
 
@@ -37,12 +40,10 @@ void pairingToQuaternion(const arma::vec3 &inputPoint, const arma::vec3 &inputTr
   }
 }
 
-arma::mat33 computeRotationFromQuaternion(const arma::vec4 &eigenVector)
+template <class VectorType>
+arma::mat33 computeRotationFromQuaternion(const VectorType &eigenVector)
 {
-  double normVector = 0;
-
-  for (unsigned int i = 0;i < eigenVector.size();++i)
-    normVector += eigenVector[i]*eigenVector[i];
+  double normVector = arma::dot(eigenVector, eigenVector);
 
   arma::mat33 resVal;
   resVal.fill(0.0);
@@ -62,7 +63,8 @@ arma::mat33 computeRotationFromQuaternion(const arma::vec4 &eigenVector)
   return resVal;
 }
 
-arma::mat33 GetRotationMatrixFromVectors(const arma::vec3 &first_direction, const arma::vec3 &second_direction)
+template <class VectorType>
+arma::mat33 GetRotationMatrixFromVectors(const VectorType &first_direction, const VectorType &second_direction)
 {
   arma::mat44 tmpMatrix;
   tmpMatrix.fill(0.0);
@@ -70,7 +72,7 @@ arma::mat33 GetRotationMatrixFromVectors(const arma::vec3 &first_direction, cons
   arma::mat44 AMatrix = tmpMatrix.t() * tmpMatrix;
 
   // Needs two points, providing one on normal vector (cross product)
-  arma::vec3 tmpVec;
+  VectorType tmpVec;
   tmpVec[0] = first_direction[1] * second_direction[2] - first_direction[2] * second_direction[1];
   tmpVec[1] = first_direction[2] * second_direction[0] - first_direction[0] * second_direction[2];
   tmpVec[2] = first_direction[0] * second_direction[1] - first_direction[1] * second_direction[0];

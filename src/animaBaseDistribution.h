@@ -14,8 +14,8 @@ class BaseDistribution
 {
 public:
   using Self = BaseDistribution;
-  using ValueType = arma::vec3;
-  using SampleType = std::vector<ValueType>;
+  using ValueType = arma::rowvec3;
+  using SampleType = arma::mat;
   using GeneratorType = std::mt19937;
 
   BaseDistribution() {}

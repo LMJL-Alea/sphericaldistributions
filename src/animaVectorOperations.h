@@ -4,7 +4,12 @@
 
 namespace anima {
 
-void TransformCartesianToSphericalCoordinates(const arma::vec3 &v, arma::vec3 &resVec);
-void TransformSphericalToCartesianCoordinates(const arma::vec3 &v, arma::vec3 &resVec);
+template <class VectorType>
+void TransformCartesianToSphericalCoordinates(const VectorType &v, VectorType &resVec);
+
+template <class VectorType>
+void TransformSphericalToCartesianCoordinates(const VectorType &v, VectorType &resVec);
 
 } // end of namespace anima
+
+#include "animaVectorOperations.hpp"

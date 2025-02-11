@@ -1,8 +1,11 @@
+#pragma once
+
 #include "animaVectorOperations.h"
 
 namespace anima {
 
-void TransformCartesianToSphericalCoordinates(const arma::vec3 &v, arma::vec3 &resVec)
+template <class VectorType>
+void TransformCartesianToSphericalCoordinates(const VectorType &v, VectorType &resVec)
 {
   double normV = arma::norm(v);
   resVec = v / normV;
@@ -32,7 +35,8 @@ void TransformCartesianToSphericalCoordinates(const arma::vec3 &v, arma::vec3 &r
   resVec[2] = normV;
 }
 
-void TransformSphericalToCartesianCoordinates(const arma::vec3 &v, arma::vec3 &resVec)
+template <class VectorType>
+void TransformSphericalToCartesianCoordinates(const VectorType &v, VectorType &resVec)
 {
   resVec[0] = v[2] * std::sin(v[0]) * std::cos(v[1]);
   resVec[1] = v[2] * std::sin(v[0]) * std::sin(v[1]);
