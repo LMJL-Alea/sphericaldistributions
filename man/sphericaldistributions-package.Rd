@@ -19,4 +19,15 @@ Useful links:
 \author{
 \strong{Maintainer}: Aymeric Stamm \email{aymeric.stamm@cnrs.fr} (\href{https://orcid.org/0000-0002-8725-3654}{ORCID})
 
+Authors:
+\itemize{
+  \item Emmanuel Caruyer \email{emmanuel.caruyer@irisa.fr}
+  \item Marie Poirier \email{marie.poirier@inria.fr}
+}
+
+Other contributors:
+\itemize{
+  \item Anima authors [contributor]
+}
+
 }

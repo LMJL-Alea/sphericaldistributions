@@ -1,9 +1,23 @@
 Package: sphericaldistributions
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
-Authors@R: 
-    person("Aymeric", "Stamm", , "aymeric.stamm@cnrs.fr", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-8725-3654"))
+Authors@R: c(
+    person(given = "Aymeric",
+           family = "Stamm",
+           role = c("aut", "cre"),
+           email = "aymeric.stamm@cnrs.fr",
+           comment = c(ORCID = "0000-0002-8725-3654")),
+    person(given = "Emmanuel",
+           family = "Caruyer",
+           role = "aut",
+           email = "emmanuel.caruyer@irisa.fr"),
+    person(given = "Marie",
+           family = "Poirier",
+           role = "aut",
+           email = "marie.poirier@inria.fr"),
+    person(given = "Anima",
+           family = "authors",
+           role = "ctb"))
 Description: What the package does (one paragraph).
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
