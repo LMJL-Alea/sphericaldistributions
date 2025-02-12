@@ -1,5 +1,7 @@
 #include "animaWatsonDistribution.h"
 
+#include <Eigen/Core>
+
 #include <boost/math/tools/roots.hpp>
 
 //' The Watson distribution
@@ -38,19 +40,23 @@
 //' @export
 //' @rdname watson
 // [[Rcpp::export]]
-arma::vec dwatson(const arma::mat &x, const arma::rowvec &mu, double kappa, bool log = false) {
+Eigen::VectorXd dwatson(const Eigen::MatrixXd &x,
+                        const Eigen::RowVectorXd &mu,
+                        double kappa,
+                        bool log = false) {
  using distr = anima::WatsonDistribution;
  distr watsonDistr;
- watsonDistr.SetMeanAxis(mu);
+ watsonDistr.SetMeanAxis(Eigen::RowVector3d(mu));
  watsonDistr.SetConcentrationParameter(kappa);
- unsigned int n = x.n_rows;
- arma::vec res(n);
+ Eigen::Ref<const Eigen::MatrixX3d> xr(x);
+ unsigned int n = xr.rows();
+ Eigen::VectorXd res(n);
  for (unsigned int i = 0;i < n;++i)
  {
    if (log)
-     res(i) = watsonDistr.GetLogDensity(x.row(i));
+     res(i) = watsonDistr.GetLogDensity(xr.row(i));
    else
-     res(i) = watsonDistr.GetDensity(x.row(i));
+     res(i) = watsonDistr.GetDensity(xr.row(i));
  }
  return res;
 }
@@ -58,50 +64,31 @@ arma::vec dwatson(const arma::mat &x, const arma::rowvec &mu, double kappa, bool
 //' @export
 //' @rdname watson
 // [[Rcpp::export]]
-arma::vec pwatson(const arma::mat &x, const arma::rowvec &mu, double kappa) {
+Eigen::VectorXd pwatson(const Eigen::MatrixXd &x,
+                        const Eigen::RowVectorXd &mu,
+                        double kappa) {
  using distr = anima::WatsonDistribution;
  distr watsonDistr;
- watsonDistr.SetMeanAxis(mu);
+ watsonDistr.SetMeanAxis(Eigen::RowVector3d(mu));
  watsonDistr.SetConcentrationParameter(kappa);
- unsigned int n = x.n_rows;
- arma::vec res(n);
+ Eigen::Ref<const Eigen::MatrixX3d> xr(x);
+ unsigned int n = xr.rows();
+ Eigen::VectorXd res(n);
  for (unsigned int i = 0;i < n;++i)
-   res(i) = watsonDistr.GetCumulative(x.row(i));
+   res(i) = watsonDistr.GetCumulative(xr.row(i));
  return res;
 }
 
 //' @export
 //' @rdname watson
 // [[Rcpp::export]]
-arma::mat qwatson(const arma::vec &p, const arma::rowvec &mu, double kappa) {
- using distr = anima::WatsonDistribution;
- distr watsonDistr;
- watsonDistr.SetMeanAxis(mu);
- watsonDistr.SetConcentrationParameter(kappa);
- unsigned int n = p.n_elem;
- arma::mat res(n, 3);
- // for (unsigned int i = 0;i < n;++i)
- // {
- //   auto f = [&watsonDistr, &p, i](arma::vec x) { return watsonDistr.GetCumulative(x) - p[i]; };
- //   // use boost to find the root
- //   boost::uintmax_t max_iter = 100;
- //   boost::math::tools::eps_tolerance<double> tol(30);
- //   arma::vec x = arma::randu<arma::vec>(3);
- //   boost::uintmax_t iters = boost::math::tools::newton_raphson_iterate(f, x, x, tol, max_iter);
- //   boost::math::tools::bracket_and_solve_root(f, x, x, tol, max_iter);
- //   res.row(i) = x.t();
- // }
- return res;
-}
-
-//' @export
-//' @rdname watson
-// [[Rcpp::export]]
-arma::mat rwatson(unsigned int n, const arma::rowvec &mu, double kappa) {
+Eigen::MatrixXd rwatson(unsigned int n,
+                        const Eigen::RowVectorXd &mu,
+                        double kappa) {
  using distr = anima::WatsonDistribution;
  distr watsonDistr;
  distr::SampleType samples(n, 3);
- watsonDistr.SetMeanAxis(mu);
+ watsonDistr.SetMeanAxis(Eigen::RowVector3d(mu));
  watsonDistr.SetConcentrationParameter(kappa);
  distr::GeneratorType generator(std::time(0));
  watsonDistr.Random(samples, generator);
@@ -109,9 +96,10 @@ arma::mat rwatson(unsigned int n, const arma::rowvec &mu, double kappa) {
 }
 
 // [[Rcpp::export]]
-arma::rowvec mean_watson_impl(const arma::mat &x) {
+Eigen::RowVectorXd mean_watson_impl(const Eigen::MatrixXd &x) {
   using distr = anima::WatsonDistribution;
   distr watsonDistr;
-  watsonDistr.Fit(x, "");
+  Eigen::Ref<const Eigen::MatrixX3d> xr(x);
+  watsonDistr.Fit(xr, "");
   return watsonDistr.GetMeanAxis();
 }

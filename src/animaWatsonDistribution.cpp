@@ -4,12 +4,14 @@
 #include "animaRotationOperations.h"
 #include "animaVectorOperations.h"
 
+#include <Eigen/Eigenvalues>
+
 namespace anima
 {
 
 bool WatsonDistribution::BelongsToSupport(const ValueType &x)
 {
-  return std::abs(arma::norm(x) - 1.0) < this->GetEpsilon();
+  return std::abs(x.norm() - 1.0) < this->GetEpsilon();
 }
 
 void WatsonDistribution::SetMeanAxis(const ValueType &val)
@@ -43,14 +45,14 @@ double WatsonDistribution::GetDensity(const ValueType &x)
   if (m_ConcentrationParameter > this->GetEpsilon())
   {
     double kappaSqrt = std::sqrt(m_ConcentrationParameter);
-    double c = arma::dot(x, m_MeanAxis);
+    double c = m_MeanAxis.dot(x);
     double inExp = m_ConcentrationParameter * (c * c - 1.0);
     return kappaSqrt * std::exp(inExp) / (4.0 * M_PI * anima::EvaluateDawsonFunctionNR(kappaSqrt));
   }
 
   // Case 3: k < 0 - Gridle distribution on the 2-sphere
   double Ck = std::sqrt(-m_ConcentrationParameter / M_PI) / (2.0 * M_PI * std::erf(std::sqrt(-m_ConcentrationParameter)));
-  double c = arma::dot(x, m_MeanAxis);
+  double c = m_MeanAxis.dot(x);
   double inExp = m_ConcentrationParameter * c * c;
   return Ck * std::exp(inExp);
 }
@@ -142,14 +144,13 @@ void WatsonDistribution::Fit(const SampleType &sample, const std::string &method
    * \param	method A string specifying the estimation method. Unused here.
    **********************************************************************************************/
 
-  unsigned int numberOfObservations = sample.n_rows;
+  unsigned int numberOfObservations = sample.rows();
   ValueType meanAxis;
   meanAxis.fill(0.0);
   meanAxis[2] = 1.0;
   double concentrationParameter = 0.0;
 
-  using MatrixType = arma::mat33;
-  MatrixType scatterMatrix;
+  RotationMatrixType scatterMatrix;
   scatterMatrix.fill(0.0);
   for (unsigned int i = 0; i < numberOfObservations; ++i)
   {
@@ -168,9 +169,8 @@ void WatsonDistribution::Fit(const SampleType &sample, const std::string &method
   scatterMatrix /= static_cast<double>(numberOfObservations);
 
   // Eigen decomposition of S
-  arma::vec eigenVals;
-  arma::mat eigenVecs;
-  arma::eig_sym(eigenVals, eigenVecs, scatterMatrix);
+  Eigen::SelfAdjointEigenSolver<RotationMatrixType> es(scatterMatrix);
+  RotationMatrixType eigenVecs = es.eigenvectors();
 
   double aValue = 0.5;
   double cValue = static_cast<double>(m_AmbientDimension) / 2.0;
@@ -180,7 +180,7 @@ void WatsonDistribution::Fit(const SampleType &sample, const std::string &method
   for (unsigned int i = 0; i < m_AmbientDimension; ++i)
   {
     for (unsigned int j = 0; j < m_AmbientDimension; ++j)
-      bipolarRValue += eigenVecs(2, i) * scatterMatrix(i, j) * eigenVecs(2, j);
+      bipolarRValue += eigenVecs(i, 2) * scatterMatrix(i, j) * eigenVecs(j, 2);
   }
 
   double bipolarLogLik;
@@ -192,7 +192,7 @@ void WatsonDistribution::Fit(const SampleType &sample, const std::string &method
   for (unsigned int i = 0; i < m_AmbientDimension; ++i)
   {
     for (unsigned int j = 0; j < m_AmbientDimension; ++j)
-      gridleRValue += eigenVecs(0, i) * scatterMatrix(i, j) * eigenVecs(0, j);
+      gridleRValue += eigenVecs(i, 0) * scatterMatrix(i, j) * eigenVecs(j, 0);
   }
 
   double gridleLogLik;
@@ -204,14 +204,14 @@ void WatsonDistribution::Fit(const SampleType &sample, const std::string &method
     if (gridleLogLik > bipolarLogLik)
     {
       for (unsigned int i = 0; i < m_AmbientDimension; ++i)
-        meanAxis[i] = eigenVecs(0, i);
+        meanAxis[i] = eigenVecs(i, 0);
       concentrationParameter = gridleKappa;
       m_RValue = gridleRValue;
     }
     else
     {
       for (unsigned int i = 0; i < m_AmbientDimension; ++i)
-        meanAxis[i] = eigenVecs(2, i);
+        meanAxis[i] = eigenVecs(i, 2);
       concentrationParameter = bipolarKappa;
       m_RValue = bipolarRValue;
     }
@@ -219,14 +219,14 @@ void WatsonDistribution::Fit(const SampleType &sample, const std::string &method
   else if (bipolarValid)
   {
     for (unsigned int i = 0; i < m_AmbientDimension; ++i)
-      meanAxis[i] = eigenVecs(2, i);
+      meanAxis[i] = eigenVecs(i, 2);
     concentrationParameter = bipolarKappa;
     m_RValue = bipolarRValue;
   }
   else if (gridleValid)
   {
     for (unsigned int i = 0; i < m_AmbientDimension; ++i)
-      meanAxis[i] = eigenVecs(0, i);
+      meanAxis[i] = eigenVecs(i, 0);
     concentrationParameter = bipolarKappa;
     m_RValue = gridleRValue;
   }
@@ -236,7 +236,7 @@ void WatsonDistribution::Fit(const SampleType &sample, const std::string &method
     m_RValue = gridleRValue;
   }
 
-  meanAxis = arma::normalise(meanAxis);
+  meanAxis.normalize();
 
   this->SetMeanAxis(meanAxis);
   this->SetConcentrationParameter(concentrationParameter);
@@ -263,7 +263,7 @@ void WatsonDistribution::Random(SampleType &sample, GeneratorType &generator)
   // Now resuming onto sampling around direction [0,0,1]
   double U, V, S;
   RealUniformDistributionType distributionValue(0.0, 1.0);
-  unsigned int nSamples = sample.n_rows;
+  unsigned int nSamples = sample.rows();
 
   for (unsigned int i = 0; i < nSamples; ++i)
   {
@@ -315,14 +315,9 @@ void WatsonDistribution::Random(SampleType &sample, GeneratorType &generator)
     tmpVec[2] = S;
 
     // Rotate to bring everthing back around meanAxis
-    for (unsigned int j = 0; j < m_AmbientDimension; ++j)
-    {
-      resVec[j] = 0.0;
-      for (unsigned int k = 0; k < m_AmbientDimension; ++k)
-        resVec[j] += m_NorthToMeanAxisRotationMatrix(j, k) * tmpVec[k];
-    }
+    resVec = tmpVec * m_NorthToMeanAxisRotationMatrix.transpose();
 
-    double resNorm = arma::norm(resVec);
+    double resNorm = resVec.norm();
     resVec /= resNorm;
 
     if (std::abs(resNorm - 1.0) > this->GetEpsilon())
@@ -341,7 +336,7 @@ WatsonDistribution::ValueType WatsonDistribution::GetMean()
   return meanValue;
 }
 
-arma::mat33 WatsonDistribution::GetCovarianceMatrix()
+RotationMatrixType WatsonDistribution::GetCovarianceMatrix()
 {
   /**
    * \fn vnl_matrix<double> WatsonDistribution::GetCovarianceMatrix()
@@ -353,7 +348,7 @@ arma::mat33 WatsonDistribution::GetCovarianceMatrix()
    * covariance matrix of the Watson distribution.
    */
 
-  arma::mat33 covarianceMatrix;
+  RotationMatrixType covarianceMatrix;
   covarianceMatrix.fill(0.0);
 
   if (std::abs(m_ConcentrationParameter) < this->GetEpsilon())
@@ -363,7 +358,7 @@ arma::mat33 WatsonDistribution::GetCovarianceMatrix()
     return covarianceMatrix;
   }
 
-  arma::mat33 tmpMatrix;
+  RotationMatrixType tmpMatrix;
   tmpMatrix.fill(0.0);
 
   double sqrtKappa = std::sqrt(m_ConcentrationParameter);

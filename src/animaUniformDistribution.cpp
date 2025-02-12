@@ -6,7 +6,7 @@ namespace anima
 
 bool UniformDistribution::BelongsToSupport(const ValueType &x)
 {
-  return std::abs(arma::norm(x) - 1.0) < this->GetEpsilon();
+  return std::abs(x.norm() - 1.0) < this->GetEpsilon();
 }
 
 double UniformDistribution::GetDensity(const ValueType &x)
@@ -50,7 +50,7 @@ void UniformDistribution::Random(SampleType &sample, GeneratorType &generator)
   RealUniformDistributionType unifDistr(0.0, 1.0);
   ValueType sphCoords, carCoords;
   sphCoords[2] = 1.0;
-  unsigned int nSamples = sample.n_rows;
+  unsigned int nSamples = sample.rows();
   for (unsigned int i = 0; i < nSamples; ++i)
   {
     sphCoords[0] = 2.0 * std::asin(std::sqrt(unifDistr(generator)));

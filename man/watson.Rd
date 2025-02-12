@@ -4,15 +4,12 @@
 \alias{watson}
 \alias{dwatson}
 \alias{pwatson}
-\alias{qwatson}
 \alias{rwatson}
 \title{The Watson distribution}
 \usage{
 dwatson(x, mu, kappa, log = FALSE)
 
 pwatson(x, mu, kappa)
-
-qwatson(p, mu, kappa)
 
 rwatson(n, mu, kappa)
 }

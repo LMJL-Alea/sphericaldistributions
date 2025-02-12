@@ -5,7 +5,8 @@
 #include <string>
 #include <vector>
 
-#include <RcppArmadillo.h>
+#include <Rcpp.h>
+#include <Eigen/Core>
 
 namespace anima
 {
@@ -14,9 +15,11 @@ class BaseDistribution
 {
 public:
   using Self = BaseDistribution;
-  using ValueType = arma::rowvec3;
-  using SampleType = arma::mat;
+  using ValueType = Eigen::RowVector3d;
+  using SampleType = Eigen::MatrixX3d;
+  using RotationMatrixType = Eigen::Matrix3d;
   using GeneratorType = std::mt19937;
+  using RealUniformDistributionType = std::uniform_real_distribution<double>;
 
   BaseDistribution() {}
 

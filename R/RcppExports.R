@@ -49,12 +49,6 @@ pwatson <- function(x, mu, kappa) {
 
 #' @export
 #' @rdname watson
-qwatson <- function(p, mu, kappa) {
-    .Call(`_sphericaldistributions_qwatson`, p, mu, kappa)
-}
-
-#' @export
-#' @rdname watson
 rwatson <- function(n, mu, kappa) {
     .Call(`_sphericaldistributions_rwatson`, n, mu, kappa)
 }

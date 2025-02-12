@@ -10,7 +10,6 @@ namespace anima
 class VonMisesFisherDistribution : public BaseDistribution
 {
 public:
-  using RealUniformDistributionType = std::uniform_real_distribution<double>;
   using BetaDistributionType = boost::math::beta_distribution<double>;
 
   VonMisesFisherDistribution()
@@ -29,7 +28,7 @@ public:
   void Fit(const SampleType &sample, const std::string &method);
   void Random(SampleType &sample, GeneratorType &generator);
   ValueType GetMean() { return m_BesselRatio * m_MeanDirection; }
-  double GetVariance() { return arma::trace(this->GetCovarianceMatrix()); }
+  double GetVariance() { return this->GetCovarianceMatrix().trace(); }
   double GetDistance(Self *otherDistribution);
 
   void SetMeanDirection(const ValueType &x);
@@ -39,7 +38,7 @@ public:
   double GetConcentrationParameter() { return m_ConcentrationParameter; }
 
   double GetBesselRatio() { return m_BesselRatio; }
-  arma::mat33 GetCovarianceMatrix();
+  RotationMatrixType GetCovarianceMatrix();
 
 private:
   void SampleFromVMFDistribution(ValueType &resVec, GeneratorType &generator);

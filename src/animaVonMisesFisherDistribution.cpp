@@ -8,7 +8,7 @@ namespace anima
 
 bool VonMisesFisherDistribution::BelongsToSupport(const ValueType &x)
 {
-  return std::abs(arma::norm(x) - 1.0) < this->GetEpsilon();
+  return std::abs(x.norm() - 1.0) < this->GetEpsilon();
 }
 
 void VonMisesFisherDistribution::SetMeanDirection(const ValueType &val)
@@ -35,9 +35,9 @@ double VonMisesFisherDistribution::GetDensity(const ValueType &x)
   ValueType meanDirection = this->GetMeanDirection();
 
   if (kappa < std::sqrt(this->GetEpsilon()))
-    return std::exp(kappa * arma::dot(meanDirection, x)) / (4.0 * M_PI);
+    return std::exp(kappa * meanDirection.dot(x)) / (4.0 * M_PI);
 
-  double tmpVal = kappa * (arma::dot(meanDirection, x) - 1.0);
+  double tmpVal = kappa * (meanDirection.dot(x) - 1.0);
   double resVal = std::exp(tmpVal);
   resVal *= kappa;
   tmpVal = 1.0 - std::exp(-2.0 * kappa);
@@ -108,7 +108,7 @@ void VonMisesFisherDistribution::Fit(const SampleType &sample, const std::string
   for (unsigned int i = 0; i < numberOfObservations; ++i)
     for (unsigned int j = 0; j < m_AmbientDimension; ++j)
       meanDirection[j] += sample(i, j);
-  double normValue = arma::norm(meanDirection);
+  double normValue = meanDirection.norm();
   meanDirection /= normValue;
   double resultantValue = normValue / static_cast<double>(numberOfObservations);
 
@@ -214,7 +214,7 @@ double VonMisesFisherDistribution::GetDistance(Self *otherDistribution)
   return thisToOtherDist + otherToThisDist;
 }
 
-arma::mat33 VonMisesFisherDistribution::GetCovarianceMatrix()
+RotationMatrixType VonMisesFisherDistribution::GetCovarianceMatrix()
 {
   /**
    * \fn arma::mat33 VonMisesFisherDistribution::GetCovarianceMatrix()
@@ -228,7 +228,7 @@ arma::mat33 VonMisesFisherDistribution::GetCovarianceMatrix()
    * arXiv:2202.05192v1 (https://arxiv.org/pdf/2202.05192v1.pdf).
    */
 
-  arma::mat33 covarianceMatrix;
+  RotationMatrixType covarianceMatrix;
   double diagConstant = m_BesselRatio / m_ConcentrationParameter;
   double offDiagConstant = 1.0 - static_cast<double>(m_AmbientDimension) * m_BesselRatio / m_ConcentrationParameter - m_BesselRatio * m_BesselRatio;
 
@@ -271,7 +271,7 @@ void VonMisesFisherDistribution::SampleFromVMFDistribution(ValueType &resVec, Ge
   tmpVec[2] = 1.0;
 
   // Compute rotation matrix to bring [0,0,1] on meanDirection
-  arma::mat33 rotationMatrix = anima::GetRotationMatrixFromVectors(tmpVec, m_MeanDirection);
+  RotationMatrixType rotationMatrix = anima::GetRotationMatrixFromVectors(tmpVec, m_MeanDirection);
 
   // Now resuming onto sampling around direction [0,0,1]
   RealUniformDistributionType unifDistr(0.0, 1.0);
@@ -308,7 +308,7 @@ void VonMisesFisherDistribution::SampleFromVMFDistribution(ValueType &resVec, Ge
       resVec[j] += rotationMatrix(j, k) * tmpVec[k];
   }
 
-  double resNorm = arma::norm(resVec);
+  double resNorm = resVec.norm();
   resVec /= resNorm;
 
   if (std::abs(resNorm - 1.0) > this->GetEpsilon())
@@ -344,7 +344,7 @@ void VonMisesFisherDistribution::SampleFromVMFDistributionNumericallyStable(Valu
   tmpVec[2] = 1.0;
 
   // Compute rotation matrix to bring [0,0,1] on meanDirection
-  arma::mat33 rotationMatrix = anima::GetRotationMatrixFromVectors(tmpVec, m_MeanDirection);
+  RotationMatrixType rotationMatrix = anima::GetRotationMatrixFromVectors(tmpVec, m_MeanDirection);
 
   // Now resuming onto sampling around direction [0,0,1]
   RealUniformDistributionType unifDistr(0.0, 1.0);
@@ -365,7 +365,7 @@ void VonMisesFisherDistribution::SampleFromVMFDistributionNumericallyStable(Valu
       resVec[j] += rotationMatrix(j, k) * tmpVec[k];
   }
 
-  double resNorm = arma::norm(resVec);
+  double resNorm = resVec.norm();
   resVec /= resNorm;
 
   if (std::abs(resNorm - 1.0) > this->GetEpsilon())

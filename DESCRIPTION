@@ -15,6 +15,6 @@ BugReports: https://github.com/LMJL-Alea/sphericaldistributions/issues
 LinkingTo: 
     BH,
     Rcpp,
-    RcppArmadillo
+    RcppEigen
 Imports: 
     Rcpp

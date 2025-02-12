@@ -7,7 +7,7 @@ namespace anima {
 template <class VectorType>
 void TransformCartesianToSphericalCoordinates(const VectorType &v, VectorType &resVec)
 {
-  double normV = arma::norm(v);
+  double normV = v.norm();
   resVec = v / normV;
 
   if (resVec[2] >= 1.0)

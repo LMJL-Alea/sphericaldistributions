@@ -8,7 +8,6 @@ namespace anima
 class WatsonDistribution : public BaseDistribution
 {
 public:
-  using RealUniformDistributionType = std::uniform_real_distribution<double>;
 
   WatsonDistribution()
   {
@@ -35,7 +34,7 @@ public:
   void SetConcentrationParameter(const double &x);
   double GetConcentrationParameter() { return m_ConcentrationParameter; }
 
-  arma::mat33 GetCovarianceMatrix();
+  RotationMatrixType GetCovarianceMatrix();
   void GetStandardWatsonSHCoefficients(
       std::vector<double> &coefficients,
       std::vector<double> &derivatives);
@@ -45,7 +44,7 @@ private:
   ValueType m_MeanAxis;
   double m_ConcentrationParameter;
   double m_RValue;
-  arma::mat33 m_NorthToMeanAxisRotationMatrix;
+  RotationMatrixType m_NorthToMeanAxisRotationMatrix;
   const unsigned int m_AmbientDimension = 3;
 };
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <RcppArmadillo.h>
-
 namespace anima {
 
 template <class VectorType>

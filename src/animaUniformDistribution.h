@@ -8,7 +8,6 @@ namespace anima
 class UniformDistribution : public BaseDistribution
 {
 public:
-  using RealUniformDistributionType = std::uniform_real_distribution<double>;
 
   UniformDistribution() {}
 
