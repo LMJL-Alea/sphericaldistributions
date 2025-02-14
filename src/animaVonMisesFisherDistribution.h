@@ -19,6 +19,8 @@ public:
     m_MeanDirection[2] = 1;
     m_ConcentrationParameter = 1.0;
     m_BesselRatio = 1.0;
+    m_RealUniformDistribution = RealUniformDistributionType(0.0, 1.0);
+    m_BetaDistribution = BetaDistributionType(1.0, 1.0);
   }
 
   bool BelongsToSupport(const ValueType &x);
@@ -46,6 +48,9 @@ private:
   ValueType m_MeanDirection;
   double m_ConcentrationParameter;
   double m_BesselRatio;
+  RotationMatrixType m_NorthToMeanAxisRotationMatrix;
+  RealUniformDistributionType m_RealUniformDistribution;
+  BetaDistributionType m_BetaDistribution;
   const unsigned int m_AmbientDimension = 3;
 };
 

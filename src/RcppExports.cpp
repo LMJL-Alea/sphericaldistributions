@@ -11,6 +11,57 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// dvmf
+Eigen::VectorXd dvmf(const Eigen::MatrixXd& x, const Eigen::RowVectorXd& mu, double kappa, bool log);
+RcppExport SEXP _sphericaldistributions_dvmf(SEXP xSEXP, SEXP muSEXP, SEXP kappaSEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Eigen::RowVectorXd& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
+    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
+    rcpp_result_gen = Rcpp::wrap(dvmf(x, mu, kappa, log));
+    return rcpp_result_gen;
+END_RCPP
+}
+// pvmf
+Eigen::VectorXd pvmf(const Eigen::MatrixXd& x, const Eigen::RowVectorXd& mu, double kappa);
+RcppExport SEXP _sphericaldistributions_pvmf(SEXP xSEXP, SEXP muSEXP, SEXP kappaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Eigen::RowVectorXd& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
+    rcpp_result_gen = Rcpp::wrap(pvmf(x, mu, kappa));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rvmf
+Eigen::MatrixXd rvmf(unsigned int n, const Eigen::RowVectorXd& mu, double kappa);
+RcppExport SEXP _sphericaldistributions_rvmf(SEXP nSEXP, SEXP muSEXP, SEXP kappaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< unsigned int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const Eigen::RowVectorXd& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
+    rcpp_result_gen = Rcpp::wrap(rvmf(n, mu, kappa));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mean_vmf_impl
+Eigen::RowVectorXd mean_vmf_impl(const Eigen::MatrixXd& x);
+RcppExport SEXP _sphericaldistributions_mean_vmf_impl(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(mean_vmf_impl(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // dwatson
 Eigen::VectorXd dwatson(const Eigen::MatrixXd& x, const Eigen::RowVectorXd& mu, double kappa, bool log);
 RcppExport SEXP _sphericaldistributions_dwatson(SEXP xSEXP, SEXP muSEXP, SEXP kappaSEXP, SEXP logSEXP) {
@@ -64,6 +115,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_sphericaldistributions_dvmf", (DL_FUNC) &_sphericaldistributions_dvmf, 4},
+    {"_sphericaldistributions_pvmf", (DL_FUNC) &_sphericaldistributions_pvmf, 3},
+    {"_sphericaldistributions_rvmf", (DL_FUNC) &_sphericaldistributions_rvmf, 3},
+    {"_sphericaldistributions_mean_vmf_impl", (DL_FUNC) &_sphericaldistributions_mean_vmf_impl, 1},
     {"_sphericaldistributions_dwatson", (DL_FUNC) &_sphericaldistributions_dwatson, 4},
     {"_sphericaldistributions_pwatson", (DL_FUNC) &_sphericaldistributions_pwatson, 3},
     {"_sphericaldistributions_rwatson", (DL_FUNC) &_sphericaldistributions_rwatson, 3},
