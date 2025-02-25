@@ -25,8 +25,8 @@ void VonMisesFisherDistribution::SetMeanDirection(const ValueType &val)
 
 void VonMisesFisherDistribution::SetConcentrationParameter(const double &val)
 {
-  if (val < this->GetEpsilon())
-    Rcpp::Rcerr << "The concentration parameter of the von Mises Fisher distribution should be positive." << std::endl;
+  if (val < 0)
+    Rcpp::Rcerr << "The concentration parameter of the von Mises Fisher distribution should be non-negative." << std::endl;
   m_ConcentrationParameter = val;
   m_BesselRatio = anima::bessel_ratio_i_lower_bound(val, static_cast<double>(m_AmbientDimension) / 2.0);
 }
