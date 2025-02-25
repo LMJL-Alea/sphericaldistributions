@@ -1,6 +1,4 @@
-#' @importFrom graphics plot
-#' @export
-plot.sphere_sample <- function(x, radius = 0.95, res = 50, ...) {
+create_sphere <- function(radius, res) {
   f <- \(x, y, z) { x^2 + y^2 + z^2 }
   x <- y <- z <- seq(-radius, radius, length.out = res)
   g <- expand.grid(x = x, y = y, z = z)
@@ -14,9 +12,15 @@ plot.sphere_sample <- function(x, radius = 0.95, res = 50, ...) {
       x = cont[, 1], y = cont[, 2], z = cont[, 3],
       i = idx[, 1], j = idx[, 2], k = idx[, 3],
       type = "mesh3d", opacity = 0.1, showlegend = FALSE, hoverinfo = "skip"
-    ) |>
+    )
+}
+
+#' @importFrom graphics plot
+#' @export
+plot.sphere_sample <- function(x, radius = 0.95, res = 50, ...) {
+  create_sphere(radius = radius, res = res) |>
     plotly::add_markers(
-      x = spl[, 1], y = spl[, 2], z = spl[, 3],
+      x = x[, 1], y = x[, 2], z = x[, 3],
       type = "scatter3d", mode = "markers"
     )
 }
