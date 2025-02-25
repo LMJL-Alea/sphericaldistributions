@@ -8,8 +8,13 @@ microbenchmark::microbenchmark(
   times = 10L
 )
 
-n <- 100
+n <- 1000000
 spl <- as_vmf_sample(rvmf(n, mu, kappa))
+microbenchmark::microbenchmark(
+  a = mean(spl),
+  b = Directional::vmf.mle(spl, fast = FALSE, tol = 1e-15),
+  c = Directional::vmf.mle(spl, fast = TRUE, tol = 1e-15)
+)
 
 
 system.time(

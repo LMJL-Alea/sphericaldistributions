@@ -2,6 +2,11 @@
 
 #include <Eigen/Core>
 
+// directive for openMP
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 //' The Von-Mises Fisher distribution
 //'
 //' @param x A numeric matrix of shape \eqn{n \times 3} where \eqn{n} is the
@@ -49,6 +54,11 @@ Eigen::VectorXd dvmf(const Eigen::MatrixXd &x,
  Eigen::Ref<const Eigen::MatrixX3d> xr(x);
  unsigned int n = xr.rows();
  Eigen::VectorXd res(n);
+
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(omp_get_max_threads()) schedule(static)
+#endif
+
  for (unsigned int i = 0;i < n;++i)
  {
    if (log)
@@ -72,6 +82,11 @@ Eigen::VectorXd pvmf(const Eigen::MatrixXd &x,
  Eigen::Ref<const Eigen::MatrixX3d> xr(x);
  unsigned int n = xr.rows();
  Eigen::VectorXd res(n);
+
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(omp_get_max_threads()) schedule(static)
+#endif
+
  for (unsigned int i = 0;i < n;++i)
    res(i) = vmfDistr.GetCumulative(xr.row(i));
  return res;
