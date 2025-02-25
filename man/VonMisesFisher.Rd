@@ -19,10 +19,10 @@ number of samples and the columns represent the x, y, z coordinates
 of the samples.}
 
 \item{mu}{A numeric matrix of shape \eqn{1 \times 3} representing the mean
-axis of the Watson distribution.}
+axis of the Von Mises-Fisher distribution.}
 
 \item{kappa}{A positive numeric value representing the concentration
-parameter of the Watson distribution.}
+parameter of the Von Mises-Fisher distribution.}
 
 \item{log}{A logical value indicating whether the log density should be
 returned. Defaults to \code{false}.}
@@ -31,14 +31,14 @@ returned. Defaults to \code{false}.}
 }
 \value{
 \itemize{
-\item \code{dwatson} returns a numeric vector of length \eqn{n} containing the
-density values of the Watson distribution.
-\item \code{pwatson} returns a numeric vector of length \eqn{n} containing the
-cumulative density values of the Watson distribution.
-\item \code{qwatson} returns a numeric matrix of shape \eqn{n \times 3} containing
-the quantile values of the Watson distribution.
-\item \code{rwatson} returns a numeric matrix of shape \eqn{n \times 3} containing
-the random samples from the Watson distribution.
+\item \code{dvmf} returns a numeric vector of length \eqn{n} containing the
+density values of the Von Mises-Fisher distribution.
+\item \code{pvmf} returns a numeric vector of length \eqn{n} containing the
+cumulative density values of the Von Mises-Fisher distribution.
+\item \code{qvmf} returns a numeric matrix of shape \eqn{n \times 3} containing
+the quantile values of the Von Mises-Fisher distribution.
+\item \code{rvmf} returns a numeric matrix of shape \eqn{n \times 3} containing
+the random samples from the Von Mises-Fisher distribution.
 }
 }
 \description{

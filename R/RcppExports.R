@@ -7,22 +7,22 @@
 #'   number of samples and the columns represent the x, y, z coordinates
 #'   of the samples.
 #' @param mu A numeric matrix of shape \eqn{1 \times 3} representing the mean
-#'   axis of the Watson distribution.
+#'   axis of the Von Mises-Fisher distribution.
 #' @param kappa A positive numeric value representing the concentration
-#'   parameter of the Watson distribution.
+#'   parameter of the Von Mises-Fisher distribution.
 #' @param log A logical value indicating whether the log density should be
 #'   returned. Defaults to `false`.
 #' @param n An integer value indicating the number of samples to generate.
 #'
 #' @return
-#' - `dwatson` returns a numeric vector of length \eqn{n} containing the
-#' density values of the Watson distribution.
-#' - `pwatson` returns a numeric vector of length \eqn{n} containing the
-#' cumulative density values of the Watson distribution.
-#' - `qwatson` returns a numeric matrix of shape \eqn{n \times 3} containing
-#' the quantile values of the Watson distribution.
-#' - `rwatson` returns a numeric matrix of shape \eqn{n \times 3} containing
-#' the random samples from the Watson distribution.
+#' - `dvmf` returns a numeric vector of length \eqn{n} containing the
+#' density values of the Von Mises-Fisher distribution.
+#' - `pvmf` returns a numeric vector of length \eqn{n} containing the
+#' cumulative density values of the Von Mises-Fisher distribution.
+#' - `qvmf` returns a numeric matrix of shape \eqn{n \times 3} containing
+#' the quantile values of the Von Mises-Fisher distribution.
+#' - `rvmf` returns a numeric matrix of shape \eqn{n \times 3} containing
+#' the random samples from the Von Mises-Fisher distribution.
 #'
 #' @examples
 #' mu <- c(1, 0, 0)
