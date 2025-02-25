@@ -7,7 +7,7 @@
 
 [![R-CMD-check](https://github.com/LMJL-Alea/sphericaldistributions/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/LMJL-Alea/sphericaldistributions/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
-coverage](https://codecov.io/gh/LMJL-Alea/sphericaldistributions/graph/badge.svg)](https://app.codecov.io/gh/LMJL-Alea/sphericaldistributions)
+coverage](https://codecov.io/gh/LMJL-Alea/sphericaldistributions/graph/badge.svg)](https://app.codecov.io/gh/LMJL-Alea/sphericaldistributions/tree/master)
 <!-- badges: end -->
 
 The goal of sphericaldistributions is to …
