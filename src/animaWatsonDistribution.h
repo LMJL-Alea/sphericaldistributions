@@ -18,7 +18,6 @@ public:
     m_RValue = 0.0;
   }
 
-  bool BelongsToSupport(const ValueType &x);
   double GetDensity(const ValueType &x);
   double GetLogDensity(const ValueType &x);
   double GetCumulative(const ValueType &x);

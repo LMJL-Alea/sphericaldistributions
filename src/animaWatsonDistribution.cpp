@@ -9,11 +9,6 @@
 namespace anima
 {
 
-bool WatsonDistribution::BelongsToSupport(const ValueType &x)
-{
-  return std::abs(x.norm() - 1.0) < this->GetEpsilon();
-}
-
 void WatsonDistribution::SetMeanAxis(const ValueType &val)
 {
   if (!this->BelongsToSupport(val))

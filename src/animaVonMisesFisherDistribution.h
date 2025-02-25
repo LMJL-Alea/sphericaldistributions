@@ -23,7 +23,6 @@ public:
     m_BetaDistribution = BetaDistributionType(1.0, 1.0);
   }
 
-  bool BelongsToSupport(const ValueType &x);
   double GetDensity(const ValueType &x);
   double GetLogDensity(const ValueType &x);
   double GetCumulative(const ValueType &x);

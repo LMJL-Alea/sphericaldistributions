@@ -10,11 +10,6 @@
 namespace anima
 {
 
-bool VonMisesFisherDistribution::BelongsToSupport(const ValueType &x)
-{
-  return std::abs(x.norm() - 1.0) < this->GetEpsilon();
-}
-
 void VonMisesFisherDistribution::SetMeanDirection(const ValueType &val)
 {
   if (!this->BelongsToSupport(val))
