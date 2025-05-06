@@ -3,25 +3,30 @@
 #include "animaVectorOperations.h"
 #include "animaRotationOperations.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace anima
 {
-
-bool VonMisesFisherDistribution::BelongsToSupport(const ValueType &x)
-{
-  return std::abs(x.norm() - 1.0) < this->GetEpsilon();
-}
 
 void VonMisesFisherDistribution::SetMeanDirection(const ValueType &val)
 {
   if (!this->BelongsToSupport(val))
     Rcpp::Rcerr << "The mean direction parameter of the von Mises Fisher distribution should be of unit norm." << std::endl;
+
+  m_MeanDirection[0] = 0.0;
+  m_MeanDirection[1] = 0.0;
+  m_MeanDirection[2] = 1.0;
+  // Compute rotation matrix to bring [0,0,1] on meanAxis
+  m_NorthToMeanAxisRotationMatrix = anima::GetRotationMatrixFromVectors(m_MeanDirection, val);
   m_MeanDirection = val;
 }
 
 void VonMisesFisherDistribution::SetConcentrationParameter(const double &val)
 {
-  if (val < this->GetEpsilon())
-    Rcpp::Rcerr << "The concentration parameter of the von Mises Fisher distribution should be positive." << std::endl;
+  if (val < 0)
+    Rcpp::Rcerr << "The concentration parameter of the von Mises Fisher distribution should be non-negative." << std::endl;
   m_ConcentrationParameter = val;
   m_BesselRatio = anima::bessel_ratio_i_lower_bound(val, static_cast<double>(m_AmbientDimension) / 2.0);
 }
@@ -99,7 +104,7 @@ void VonMisesFisherDistribution::Fit(const SampleType &sample, const std::string
    * \param	method A string specifying the estimation method. Unused here.
    **********************************************************************************************/
 
-  unsigned int numberOfObservations = sample.size();
+  unsigned int numberOfObservations = sample.rows();
   double ambientDimension = static_cast<double>(m_AmbientDimension);
 
   // Eq. (2)
@@ -158,24 +163,20 @@ void VonMisesFisherDistribution::Random(SampleType &sample, GeneratorType &gener
    * \param	generator A pseudo-random number generator.
    **********************************************************************************************/
 
-  unsigned int sampleSize = sample.size();
+  unsigned int sampleSize = sample.rows();
   ValueType sampleValue;
 
-  if (m_ConcentrationParameter > 700.0)
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(omp_get_max_threads()) schedule(static)
+#endif
+
+  for (unsigned int i = 0; i < sampleSize; ++i)
   {
-    for (unsigned int i = 0; i < sampleSize; ++i)
-    {
+    if (m_ConcentrationParameter > 700.0)
       this->SampleFromVMFDistributionNumericallyStable(sampleValue, generator);
-      sample.row(i) = sampleValue;
-    }
-  }
-  else
-  {
-    for (unsigned int i = 0; i < sampleSize; ++i)
-    {
+    else
       this->SampleFromVMFDistribution(sampleValue, generator);
-      sample.row(i) = sampleValue;
-    }
+    sample.row(i) = sampleValue;
   }
 }
 
@@ -265,18 +266,6 @@ void VonMisesFisherDistribution::SampleFromVMFDistribution(ValueType &resVec, Ge
    * use.
    */
 
-  ValueType tmpVec;
-  for (unsigned int i = 0; i < m_AmbientDimension; ++i)
-    tmpVec[i] = 0;
-  tmpVec[2] = 1.0;
-
-  // Compute rotation matrix to bring [0,0,1] on meanDirection
-  RotationMatrixType rotationMatrix = anima::GetRotationMatrixFromVectors(tmpVec, m_MeanDirection);
-
-  // Now resuming onto sampling around direction [0,0,1]
-  RealUniformDistributionType unifDistr(0.0, 1.0);
-  BetaDistributionType betaDistr(1.0, 1.0);
-
   double tmpVal = std::sqrt(m_ConcentrationParameter * m_ConcentrationParameter + 1.0);
   double b = (-2.0 * m_ConcentrationParameter + 2.0 * tmpVal) / 2.0;
   double a = (1.0 + m_ConcentrationParameter + tmpVal) / 2.0;
@@ -288,25 +277,20 @@ void VonMisesFisherDistribution::SampleFromVMFDistribution(ValueType &resVec, Ge
 
   while (2.0 * std::log(T) - T + d < std::log(U))
   {
-    double Z = boost::math::quantile(betaDistr, unifDistr(generator));
-    U = unifDistr(generator);
+    double Z = boost::math::quantile(m_BetaDistribution, m_RealUniformDistribution(generator));
+    U = m_RealUniformDistribution(generator);
     tmpVal = 1.0 - (1.0 - b) * Z;
     T = 2.0 * a * b / tmpVal;
     W = (1.0 - (1.0 + b) * Z) / tmpVal;
   }
 
-  double theta = 2.0 * M_PI * unifDistr(generator);
-  tmpVec[0] = std::sqrt(1.0 - W * W) * std::cos(theta);
-  tmpVec[1] = std::sqrt(1.0 - W * W) * std::sin(theta);
-  tmpVec[2] = W;
+  double theta = 2.0 * M_PI * m_RealUniformDistribution(generator);
+  resVec[0] = std::sqrt(1.0 - W * W) * std::cos(theta);
+  resVec[1] = std::sqrt(1.0 - W * W) * std::sin(theta);
+  resVec[2] = W;
 
-  // Rotate to bring everthing back around meanDirection
-  for (unsigned int j = 0; j < m_AmbientDimension; ++j)
-  {
-    resVec[j] = 0.0;
-    for (unsigned int k = 0; k < m_AmbientDimension; ++k)
-      resVec[j] += rotationMatrix(j, k) * tmpVec[k];
-  }
+  // Rotate to bring everything back around meanDirection
+  resVec = resVec * m_NorthToMeanAxisRotationMatrix.transpose();
 
   double resNorm = resVec.norm();
   resVec /= resNorm;
@@ -338,32 +322,16 @@ void VonMisesFisherDistribution::SampleFromVMFDistributionNumericallyStable(Valu
    * use.
    */
 
-  ValueType tmpVec;
-  for (unsigned int i = 0; i < m_AmbientDimension; ++i)
-    tmpVec[i] = 0;
-  tmpVec[2] = 1.0;
+  double xi = m_RealUniformDistribution(generator);
+  double W = 1.0 + (std::log(xi) + std::log(1.0 - (xi - 1.0) * std::exp(-2.0 * m_ConcentrationParameter) / xi)) / m_ConcentrationParameter;
+  double theta = 2.0 * M_PI * m_RealUniformDistribution(generator);
 
-  // Compute rotation matrix to bring [0,0,1] on meanDirection
-  RotationMatrixType rotationMatrix = anima::GetRotationMatrixFromVectors(tmpVec, m_MeanDirection);
-
-  // Now resuming onto sampling around direction [0,0,1]
-  RealUniformDistributionType unifDistr(0.0, 1.0);
-
-  double xi = unifDistr(generator);
-  double W = 1.0 + (std::log(xi) + std::log(1.0 - (xi - 1.0) * exp(-2.0 * m_ConcentrationParameter) / xi)) / m_ConcentrationParameter;
-  double theta = 2.0 * M_PI * unifDistr(generator);
-
-  tmpVec[0] = std::sqrt(1.0 - W * W) * std::cos(theta);
-  tmpVec[1] = std::sqrt(1.0 - W * W) * std::sin(theta);
-  tmpVec[2] = W;
+  resVec[0] = std::sqrt(1.0 - W * W) * std::cos(theta);
+  resVec[1] = std::sqrt(1.0 - W * W) * std::sin(theta);
+  resVec[2] = W;
 
   // Rotate to bring everthing back around meanDirection
-  for (unsigned int j = 0; j < m_AmbientDimension; ++j)
-  {
-    resVec[j] = 0.0;
-    for (unsigned int k = 0; k < m_AmbientDimension; ++k)
-      resVec[j] += rotationMatrix(j, k) * tmpVec[k];
-  }
+  resVec = resVec * m_NorthToMeanAxisRotationMatrix.transpose();
 
   double resNorm = resVec.norm();
   resVec /= resNorm;

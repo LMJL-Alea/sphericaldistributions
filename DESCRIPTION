@@ -19,16 +19,16 @@ Authors@R: c(
            family = "authors",
            role = "ctb"))
 Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: AGPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 URL: https://github.com/LMJL-Alea/sphericaldistributions
 BugReports: https://github.com/LMJL-Alea/sphericaldistributions/issues
-LinkingTo: 
-    BH,
-    Rcpp,
-    RcppEigen
+LinkingTo: BH, Rcpp, RcppEigen
 Imports: 
+    cli,
+    misc3d,
+    plotly,
     Rcpp
+Suggests: tinytest

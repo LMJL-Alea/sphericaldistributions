@@ -4,11 +4,6 @@
 namespace anima
 {
 
-bool UniformDistribution::BelongsToSupport(const ValueType &x)
-{
-  return std::abs(x.norm() - 1.0) < this->GetEpsilon();
-}
-
 double UniformDistribution::GetDensity(const ValueType &x)
 {
   if (!this->BelongsToSupport(x))
