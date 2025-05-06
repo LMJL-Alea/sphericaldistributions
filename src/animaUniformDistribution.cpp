@@ -62,9 +62,7 @@ void UniformDistribution::Random(SampleType &sample, GeneratorType &generator)
 
 UniformDistribution::ValueType UniformDistribution::GetMean()
 {
-  ValueType meanValue;
-  meanValue.fill(0.0);
-  return meanValue;
+  Rcpp::Rcerr << "The mean is not defined on the sphere." << std::endl;
 }
 
 double UniformDistribution::GetDistance(Self *otherDistribution)
