@@ -27,10 +27,10 @@ extern "C" SEXP _sphericaldistributions_rvmf_impl(SEXP n, SEXP mu, SEXP kappa) {
   END_CPP11
 }
 // distrVMF.cpp
-cpp11::doubles mean_vmf_impl(const cpp11::doubles_matrix<> & x);
-extern "C" SEXP _sphericaldistributions_mean_vmf_impl(SEXP x) {
+cpp11::list fit_vmf_impl(const cpp11::doubles_matrix<> & x);
+extern "C" SEXP _sphericaldistributions_fit_vmf_impl(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(mean_vmf_impl(cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles_matrix<> &>>(x)));
+    return cpp11::as_sexp(fit_vmf_impl(cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles_matrix<> &>>(x)));
   END_CPP11
 }
 // distrWatson.cpp
@@ -55,23 +55,23 @@ extern "C" SEXP _sphericaldistributions_rwatson_impl(SEXP n, SEXP mu, SEXP kappa
   END_CPP11
 }
 // distrWatson.cpp
-cpp11::doubles mean_watson_impl(const cpp11::doubles_matrix<> & x);
-extern "C" SEXP _sphericaldistributions_mean_watson_impl(SEXP x) {
+cpp11::list fit_watson_impl(const cpp11::doubles_matrix<> & x);
+extern "C" SEXP _sphericaldistributions_fit_watson_impl(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(mean_watson_impl(cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles_matrix<> &>>(x)));
+    return cpp11::as_sexp(fit_watson_impl(cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles_matrix<> &>>(x)));
   END_CPP11
 }
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
-    {"_sphericaldistributions_dvmf_impl",        (DL_FUNC) &_sphericaldistributions_dvmf_impl,        4},
-    {"_sphericaldistributions_dwatson_impl",     (DL_FUNC) &_sphericaldistributions_dwatson_impl,     4},
-    {"_sphericaldistributions_mean_vmf_impl",    (DL_FUNC) &_sphericaldistributions_mean_vmf_impl,    1},
-    {"_sphericaldistributions_mean_watson_impl", (DL_FUNC) &_sphericaldistributions_mean_watson_impl, 1},
-    {"_sphericaldistributions_pvmf_impl",        (DL_FUNC) &_sphericaldistributions_pvmf_impl,        3},
-    {"_sphericaldistributions_pwatson_impl",     (DL_FUNC) &_sphericaldistributions_pwatson_impl,     3},
-    {"_sphericaldistributions_rvmf_impl",        (DL_FUNC) &_sphericaldistributions_rvmf_impl,        3},
-    {"_sphericaldistributions_rwatson_impl",     (DL_FUNC) &_sphericaldistributions_rwatson_impl,     3},
+    {"_sphericaldistributions_dvmf_impl",       (DL_FUNC) &_sphericaldistributions_dvmf_impl,       4},
+    {"_sphericaldistributions_dwatson_impl",    (DL_FUNC) &_sphericaldistributions_dwatson_impl,    4},
+    {"_sphericaldistributions_fit_vmf_impl",    (DL_FUNC) &_sphericaldistributions_fit_vmf_impl,    1},
+    {"_sphericaldistributions_fit_watson_impl", (DL_FUNC) &_sphericaldistributions_fit_watson_impl, 1},
+    {"_sphericaldistributions_pvmf_impl",       (DL_FUNC) &_sphericaldistributions_pvmf_impl,       3},
+    {"_sphericaldistributions_pwatson_impl",    (DL_FUNC) &_sphericaldistributions_pwatson_impl,    3},
+    {"_sphericaldistributions_rvmf_impl",       (DL_FUNC) &_sphericaldistributions_rvmf_impl,       3},
+    {"_sphericaldistributions_rwatson_impl",    (DL_FUNC) &_sphericaldistributions_rwatson_impl,    3},
     {NULL, NULL, 0}
 };
 }

@@ -78,13 +78,18 @@ cpp11::doubles_matrix<> rwatson_impl(unsigned int n,
 }
 
 [[cpp11::register]]
-cpp11::doubles mean_watson_impl(const cpp11::doubles_matrix<> &x) {
+cpp11::list fit_watson_impl(const cpp11::doubles_matrix<> &x) {
   Eigen::MatrixX3d xr = as_Matrix(x);
   using distr = anima::WatsonDistribution;
   distr watsonDistr;
   watsonDistr.Fit(xr, "");
-  cpp11::writable::doubles res(3);
-  double* res_data = REAL(res);
-  std::memcpy(res_data, watsonDistr.GetMeanAxis().data(), 3 * sizeof(double));
+  cpp11::writable::doubles meanAxis(3);
+  double* meanAxis_data = REAL(meanAxis);
+  std::memcpy(meanAxis_data, watsonDistr.GetMeanAxis().data(), 3 * sizeof(double));
+  cpp11::writable::list res({
+    meanAxis,
+    cpp11::as_sexp(watsonDistr.GetConcentrationParameter())
+  });
+  res.names() = {"mu", "kappa"};
   return res;
 }

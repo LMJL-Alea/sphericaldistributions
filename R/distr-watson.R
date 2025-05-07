@@ -12,7 +12,11 @@ as_watson_sample <- function(x) {
   if (!is.matrix(x) || ncol(x) != 3) {
     cli::cli_abort("{.arg x} must be a numeric matrix of shape n x 3")
   }
-  class(x) <- c("watson_sample", "sphere_sample", class(x))
+  if (inherits(x, "sphere_sample")) {
+    class(x) <- c("watson_sample", class(x)[-1])
+  } else {
+    class(x) <- c("watson_sample", "sphere_sample", class(x))
+  }
   x
 }
 
@@ -47,25 +51,42 @@ as_watson_sample <- function(x) {
 #' dwatson(spl, mu, kappa)
 #' pwatson(spl, mu, kappa)
 #'
-#' @name watson
+#' @name Watson
 NULL
 
-#' @rdname watson
+#' @rdname Watson
 #' @export
 dwatson <- function(x, mu, kappa, log = FALSE) {
   dwatson_impl(x, mu, kappa, log)
 }
 
-#' @rdname watson
+#' @rdname Watson
 #' @export
 pwatson <- function(x, mu, kappa) {
   pwatson_impl(x, mu, kappa)
 }
 
-#' @rdname watson
+#' @rdname Watson
 #' @export
 rwatson <- function(n, mu, kappa) {
   as_watson_sample(rwatson_impl(n, mu, kappa))
+}
+
+#' Fit a Watson distribution via MLE
+#'
+#' @param object An object of class `watson_sample` specifying a sample of
+#'   directions on the 3-sphere.
+#' @param ... Additional arguments. Currently unused; must be empty.
+#'
+#' @return A list containing the fitted parameters `mu` (mean axis) and `kappa`
+#'   (concentration parameter) of the Watson distribution.
+#'
+#' @export
+#' @examples
+#' x <- rwatson(100, c(1, 0, 0), 10)
+#' fit(x)
+fit.watson_sample <- function(object, ...) {
+  fit_watson_impl(object)
 }
 
 #' Compute the mean of a `watson_sample` object
@@ -81,5 +102,6 @@ rwatson <- function(n, mu, kappa) {
 #' x <- rwatson(100, c(1, 0, 0), 10)
 #' mean(x)
 mean.watson_sample <- function(x, ...) {
-  mean_watson_impl(x)
+  l <- fit_watson_impl(x)
+  l$mu
 }
