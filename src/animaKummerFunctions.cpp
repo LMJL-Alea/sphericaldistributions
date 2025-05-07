@@ -3,7 +3,7 @@
 #include <boost/math/quadrature/gauss.hpp>
 #include <boost/math/quadrature/gauss_kronrod.hpp>
 
-#include <Rcpp.h>
+#include <cpp11.hpp>
 
 namespace anima
 {
@@ -141,7 +141,7 @@ double GetKummerFunctionValue(const double &x, const double &a, const double &b,
     double ap = b - a;
     double xp = -x;
     if (ap > b)
-      Rcpp::Rcerr << "Invalid inputs for Kummer function using method 2" << std::endl;
+      cpp11::stop("Invalid inputs for Kummer function using method 2");
 
     double tmpVal = KummerMethod2(xp, ap, b, maxIter, tol);
     double logResVal = x + std::log(std::abs(tmpVal));
@@ -180,7 +180,7 @@ double GetScaledKummerFunctionValue(const double &x, const double &a, const doub
     double ap = b - a;
     double xp = -x;
     if (ap > b)
-      Rcpp::Rcerr << "Invalid inputs for Kummer function using method 2" << std::endl;
+      cpp11::stop("Invalid inputs for Kummer function using method 2");
 
     return KummerMethod2(xp, ap, b, maxIter, tol);
   }
