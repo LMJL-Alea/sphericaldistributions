@@ -12,7 +12,11 @@ as_vmf_sample <- function(x) {
   if (!is.matrix(x) || ncol(x) != 3) {
     cli::cli_abort("{.arg x} must be a numeric matrix of shape n x 3")
   }
-  class(x) <- c("vmf_sample", "sphere_sample", class(x))
+  if (inherits(x, "sphere_sample")) {
+    class(x) <- c("vmf_sample", class(x)[-1])
+  } else {
+    class(x) <- c("vmf_sample", "sphere_sample", class(x))
+  }
   x
 }
 
@@ -68,6 +72,23 @@ rvmf <- function(n, mu, kappa) {
   as_vmf_sample(rvmf_impl(n, mu, kappa))
 }
 
+#' Fit a von Mises-Fisher distribution via MLE
+#'
+#' @param object An object of class `vmf_sample` specifying a sample of
+#'   directions on the 3-sphere.
+#' @param ... Additional arguments. Currently unused; must be empty.
+#'
+#' @return A list containing the fitted parameters `mu` (mean direction) and
+#'   `kappa` (concentration parameter) of the von Mises-Fisher distribution.
+#'
+#' @export
+#' @examples
+#' x <- rvmf(100, c(1, 0, 0), 10)
+#' fit(x)
+fit.vmf_sample <- function(object, ...) {
+  fit_vmf_impl(object)
+}
+
 #' Compute the mean of a `vmf_sample` object
 #'
 #' @param x A numeric matrix of shape \eqn{n \times 3}.
@@ -81,5 +102,6 @@ rvmf <- function(n, mu, kappa) {
 #' x <- rvmf(100, c(1, 0, 0), 10)
 #' mean(x)
 mean.vmf_sample <- function(x, ...) {
-  mean_vmf_impl(x)
+  l <- fit_vmf_impl(x)
+  l$mu
 }

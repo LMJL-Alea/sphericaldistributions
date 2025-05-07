@@ -86,13 +86,18 @@ cpp11::doubles_matrix<> rvmf_impl(unsigned int n,
 }
 
 [[cpp11::register]]
-cpp11::doubles mean_vmf_impl(const cpp11::doubles_matrix<> &x) {
+cpp11::list fit_vmf_impl(const cpp11::doubles_matrix<> &x) {
   Eigen::MatrixX3d xr = as_Matrix(x);
   using distr = anima::VonMisesFisherDistribution;
   distr vmfDistr;
   vmfDistr.Fit(xr, "");
-  cpp11::writable::doubles res(3);
-  double* res_data = REAL(res);
-  std::memcpy(res_data, vmfDistr.GetMeanDirection().data(), 3 * sizeof(double));
+  cpp11::writable::doubles meanDirection(3);
+  double* meanDirection_data = REAL(meanDirection);
+  std::memcpy(meanDirection_data, vmfDistr.GetMeanDirection().data(), 3 * sizeof(double));
+  cpp11::writable::list res({
+    meanDirection,
+    cpp11::as_sexp(vmfDistr.GetConcentrationParameter())
+  });
+  res.names() = {"mu", "kappa"};
   return res;
 }

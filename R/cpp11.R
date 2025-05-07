@@ -12,8 +12,8 @@ rvmf_impl <- function(n, mu, kappa) {
   .Call(`_sphericaldistributions_rvmf_impl`, n, mu, kappa)
 }
 
-mean_vmf_impl <- function(x) {
-  .Call(`_sphericaldistributions_mean_vmf_impl`, x)
+fit_vmf_impl <- function(x) {
+  .Call(`_sphericaldistributions_fit_vmf_impl`, x)
 }
 
 dwatson_impl <- function(x, mu, kappa, log) {
@@ -28,6 +28,6 @@ rwatson_impl <- function(n, mu, kappa) {
   .Call(`_sphericaldistributions_rwatson_impl`, n, mu, kappa)
 }
 
-mean_watson_impl <- function(x) {
-  .Call(`_sphericaldistributions_mean_watson_impl`, x)
+fit_watson_impl <- function(x) {
+  .Call(`_sphericaldistributions_fit_watson_impl`, x)
 }
