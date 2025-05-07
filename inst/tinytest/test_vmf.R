@@ -15,9 +15,8 @@ expect_equal(length(dvals), n)
 pvals <- pvmf(rvals, mu, kappa)
 expect_equal(length(pvals), n)
 
-mval <- mean(as_vmf_sample(rvals))
-expect_equal(nrow(mval), 1)
-expect_equal(ncol(mval), 3)
+mval <- mean(rvals)
+expect_length(mval, 3L)
 
 # k = 10 ------------------------------------------------------------------
 
@@ -33,9 +32,8 @@ expect_equal(length(dvals), n)
 pvals <- pvmf(rvals, mu, kappa)
 expect_equal(length(pvals), n)
 
-mval <- mean(as_vmf_sample(rvals))
-expect_equal(nrow(mval), 1)
-expect_equal(ncol(mval), 3)
+mval <- mean(rvals)
+expect_length(mval, 3L)
 
 # k = 100 -----------------------------------------------------------------
 
@@ -51,9 +49,8 @@ expect_equal(length(dvals), n)
 pvals <- pvmf(rvals, mu, kappa)
 expect_equal(length(pvals), n)
 
-mval <- mean(as_vmf_sample(rvals))
-expect_equal(nrow(mval), 1)
-expect_equal(ncol(mval), 3)
+mval <- mean(rvals)
+expect_length(mval, 3L)
 
 # k = 1000 ----------------------------------------------------------------
 
@@ -69,6 +66,5 @@ expect_equal(length(dvals), n)
 pvals <- pvmf(rvals, mu, kappa)
 expect_equal(length(pvals), n)
 
-mval <- mean(as_vmf_sample(rvals))
-expect_equal(nrow(mval), 1)
-expect_equal(ncol(mval), 3)
+mval <- mean(rvals)
+expect_length(mval, 3L)

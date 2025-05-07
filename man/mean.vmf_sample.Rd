@@ -20,5 +20,5 @@ Compute the mean of a \code{vmf_sample} object
 }
 \examples{
 x <- rvmf(100, c(1, 0, 0), 10)
-mean(as_vmf_sample(x))
+mean(x)
 }

@@ -12,7 +12,7 @@ namespace anima
 void WatsonDistribution::SetMeanAxis(const ValueType &val)
 {
   if (!this->BelongsToSupport(val))
-    Rcpp::Rcerr << "The mean axis parameter of the Watson distribution should be of unit norm." << std::endl;
+    cpp11::stop("The mean axis parameter of the Watson distribution should be of unit norm.");
 
   m_MeanAxis[0] = 0.0;
   m_MeanAxis[1] = 0.0;
@@ -55,7 +55,7 @@ double WatsonDistribution::GetDensity(const ValueType &x)
 double WatsonDistribution::GetLogDensity(const ValueType &x)
 {
   if (!this->BelongsToSupport(x))
-    Rcpp::Rcerr << "The log-density of the Watson distribution is not defined for arguments outside the 2-sphere." << std::endl;
+    cpp11::stop("The log-density of the Watson distribution is not defined for arguments outside the 2-sphere.");
 
   return std::log(this->GetDensity(x));
 }
@@ -63,7 +63,7 @@ double WatsonDistribution::GetLogDensity(const ValueType &x)
 double WatsonDistribution::GetCumulative(const ValueType &x)
 {
   if (!this->BelongsToSupport(x))
-    Rcpp::Rcerr << "The CDF is not defined outside the support." << std::endl;
+    cpp11::stop("The CDF is not defined outside the support.");
 
   ValueType carCoords, sphCoords;
   carCoords.fill(0.0);
@@ -316,9 +316,7 @@ void WatsonDistribution::Random(SampleType &sample, GeneratorType &generator)
     resVec /= resNorm;
 
     if (std::abs(resNorm - 1.0) > this->GetEpsilon())
-    {
-      Rcpp::Rcerr << "The Watson sampler should generate points on the 2-sphere." << std::endl;
-    }
+      cpp11::stop("The Watson sampler should generate points on the 2-sphere.");
 
     sample.row(i) = resVec;
   }

@@ -3,6 +3,8 @@
 #include "animaVectorOperations.h"
 #include "animaRotationOperations.h"
 
+#include <string>
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -13,7 +15,20 @@ namespace anima
 void VonMisesFisherDistribution::SetMeanDirection(const ValueType &val)
 {
   if (!this->BelongsToSupport(val))
-    Rcpp::Rcerr << "The mean direction parameter of the von Mises Fisher distribution should be of unit norm." << std::endl;
+  {
+    std::string msg = "The mean direction parameter of the von Mises Fisher distribution should be a unit vector but its norm is ";
+    msg += std::to_string(val.norm());
+    msg += ", and the mean direction parameter is ";
+    msg += std::to_string(val[0]);
+    msg += ", ";
+    msg += std::to_string(val[1]);
+    msg += ", ";
+    msg += std::to_string(val[2]);
+    msg += ".";
+    cpp11::message(msg.c_str());
+    cpp11::stop("The mean direction parameter of the von Mises Fisher distribution should be of unit norm.");
+  }
+
 
   m_MeanDirection[0] = 0.0;
   m_MeanDirection[1] = 0.0;
@@ -26,7 +41,7 @@ void VonMisesFisherDistribution::SetMeanDirection(const ValueType &val)
 void VonMisesFisherDistribution::SetConcentrationParameter(const double &val)
 {
   if (val < 0)
-    Rcpp::Rcerr << "The concentration parameter of the von Mises Fisher distribution should be non-negative." << std::endl;
+    cpp11::stop("The concentration parameter of the von Mises Fisher distribution should be non-negative.");
   m_ConcentrationParameter = val;
   m_BesselRatio = anima::bessel_ratio_i_lower_bound(val, static_cast<double>(m_AmbientDimension) / 2.0);
 }
@@ -54,7 +69,7 @@ double VonMisesFisherDistribution::GetDensity(const ValueType &x)
 double VonMisesFisherDistribution::GetLogDensity(const ValueType &x)
 {
   if (!this->BelongsToSupport(x))
-    Rcpp::Rcerr << "The log-density of the von Mises Fisher distribution is not defined for arguments outside the 2-sphere." << std::endl;
+    cpp11::stop("The log-density of the von Mises Fisher distribution is not defined for arguments outside the 2-sphere.");
 
   return std::log(this->GetDensity(x));
 }
@@ -62,7 +77,7 @@ double VonMisesFisherDistribution::GetLogDensity(const ValueType &x)
 double VonMisesFisherDistribution::GetCumulative(const ValueType &x)
 {
   if (!this->BelongsToSupport(x))
-    Rcpp::Rcerr << "The CDF is not defined outside the support." << std::endl;
+    cpp11::stop("The CDF is not defined outside the support.");
 
   ValueType sphCoords;
   anima::TransformCartesianToSphericalCoordinates(x, sphCoords);
@@ -297,11 +312,13 @@ void VonMisesFisherDistribution::SampleFromVMFDistribution(ValueType &resVec, Ge
 
   if (std::abs(resNorm - 1.0) > this->GetEpsilon())
   {
-    Rcpp::Rcout << "Sampled direction norm: " << resNorm << std::endl;
-    Rcpp::Rcout << "Mean direction: " << m_MeanDirection << std::endl;
-    Rcpp::Rcout << "Concentration parameter: " << m_ConcentrationParameter << std::endl;
-    Rcpp::Rcerr << "The VMF sampler should generate points on the 2-sphere." << std::endl;
+    std::string msg = "VMF distribution sampling failed: resNorm = ";
+    msg += std::to_string(resNorm);
+    msg += " != 1.0. This is a bug in the VMF sampler.";
+    cpp11::message(msg.c_str());
+    cpp11::stop("The VMF sampler should generate points on the 2-sphere.");
   }
+
 }
 
 void VonMisesFisherDistribution::SampleFromVMFDistributionNumericallyStable(ValueType &resVec, GeneratorType &generator)
@@ -337,12 +354,7 @@ void VonMisesFisherDistribution::SampleFromVMFDistributionNumericallyStable(Valu
   resVec /= resNorm;
 
   if (std::abs(resNorm - 1.0) > this->GetEpsilon())
-  {
-    Rcpp::Rcout << "Sampled direction norm: " << resNorm << std::endl;
-    Rcpp::Rcout << "Mean direction: " << m_MeanDirection << std::endl;
-    Rcpp::Rcout << "Concentration parameter: " << m_ConcentrationParameter << std::endl;
-    Rcpp::Rcerr << "The VMF sampler should generate points on the 2-sphere." << std::endl;
-  }
+    cpp11::stop("The VMF sampler should generate points on the 2-sphere.");
 }
 
 } // end of namespace anima
