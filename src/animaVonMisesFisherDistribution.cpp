@@ -79,8 +79,13 @@ double VonMisesFisherDistribution::GetCumulative(const ValueType &x)
   if (!this->BelongsToSupport(x))
     cpp11::stop("The CDF is not defined outside the support.");
 
-  ValueType sphCoords;
-  anima::TransformCartesianToSphericalCoordinates(x, sphCoords);
+  ValueType carCoords, sphCoords;
+  carCoords.fill(0.0);
+  for (unsigned int i = 0; i < m_AmbientDimension; ++i)
+    for (unsigned int j = 0; j < m_AmbientDimension; ++j)
+      carCoords[i] += m_NorthToMeanAxisRotationMatrix(j, i) * x[j];
+  anima::TransformCartesianToSphericalCoordinates(carCoords, sphCoords);
+
   double thetaVal = sphCoords[0];
   while (thetaVal > M_PI)
     thetaVal -= (2.0 * M_PI);
