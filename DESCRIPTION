@@ -32,6 +32,6 @@ LinkingTo:
 Imports: 
     cli,
     generics,
-    misc3d,
     plotly
-Suggests: tinytest
+Suggests:
+    tinytest
