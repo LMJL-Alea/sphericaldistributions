@@ -84,6 +84,30 @@ double VonMisesFisherDistribution::GetCumulative(const ValueType &x)
   return phiCumul * thetaCumul;
 }
 
+void VonMisesFisherDistribution::GetQuantile(double p1, double p2, double& theta, double& phi)
+{
+  // The CDF is expressed as F(phi, theta) = F1(phi)xF2(theta)
+  // Inverse of F1(phi)
+  phi = 2.0 * M_PI * p2;
+
+  // Inverse of F2(theta)
+  double kappa = this->GetConcentrationParameter();
+  double denom = 1.0 - std::exp(-2.0 * kappa);
+  double arg = 1.0 - p1 * denom;
+
+  // Clamp arg to [0,1] to avoid domain errors due to floating point
+  if (arg < 0.0) arg = 0.0;
+  if (arg > 1.0) arg = 1.0;
+
+  double cos_theta = 1.0 + (1.0 / kappa) * std::log(arg);
+
+  // Clamp cos_theta to [-1, 1]
+  if (cos_theta < -1.0) cos_theta = -1.0;
+  if (cos_theta > 1.0) cos_theta = 1.0;
+
+  theta = std::acos(cos_theta);
+}
+
 void VonMisesFisherDistribution::Fit(const SampleType &sample, const std::string &method)
 {
   /**********************************************************************************************

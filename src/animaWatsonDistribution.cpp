@@ -97,6 +97,42 @@ double WatsonDistribution::GetCumulative(const ValueType &x)
   return phiCumul * thetaCumul;
 }
 
+void WatsonDistribution::GetQuantile(double p1, double p2, double& theta, double& phi)
+{
+  // The CDF is expressed as F(phi, theta) = F1(phi)xF2(theta)  
+  // Inverse of F1(phi)
+    phi = 2.0 * M_PI * p2;
+
+    // Inverse of F2(theta) using bisection
+    double tol = 1e-10;
+    double lower = 0.0;
+    double upper = M_PI;
+    double mid = 0.0;
+    double fmid = 0.0;
+
+    // Safety: clamp p1 to [0,1]
+    if (p1 < 0.0) p1 = 0.0;
+    if (p1 > 1.0) p1 = 1.0;
+
+    // Bisection method
+    int max_iter = 100;
+    for (int i = 0; i < max_iter; ++i)
+    {
+        mid = 0.5 * (lower + upper);
+        fmid = this->thetacumul(mid) - p1;
+
+        if (std::abs(fmid) < tol)
+            break;
+
+        if (fmid > 0)
+            upper = mid;
+        else
+            lower = mid;
+    }
+
+    theta = mid;
+}
+
 double WatsonDistribution::ComputeConcentrationMLE(const double rValue, const double aValue, const double cValue, double &logLik)
 {
   double bBoundValue = (rValue * cValue - aValue) / (2.0 * rValue * (1.0 - rValue));

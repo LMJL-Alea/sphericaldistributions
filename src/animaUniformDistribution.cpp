@@ -40,6 +40,11 @@ double UniformDistribution::GetCumulative(const ValueType &x)
   return phiVal / (2.0 * M_PI) * (1.0 - std::cos(thetaVal)) / 2.0;
 }
 
+void UniformDistribution::fit(const SampleType& sample)
+{
+  return;
+}
+
 void UniformDistribution::Random(SampleType &sample, GeneratorType &generator)
 {
   RealUniformDistributionType unifDistr(0.0, 1.0);
