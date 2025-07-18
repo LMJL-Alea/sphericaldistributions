@@ -20,5 +20,5 @@ Compute the mean of a \code{watson_sample} object
 }
 \examples{
 x <- rwatson(100, c(1, 0, 0), 10)
-mean(as_watson_sample(x))
+mean(x)
 }

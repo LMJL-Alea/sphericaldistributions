@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include <Rcpp.h>
-#include <Eigen/Core>
+#include <cpp11.hpp>
+#include <cpp11eigen.hpp>
 
 namespace anima
 {
