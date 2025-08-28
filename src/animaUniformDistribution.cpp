@@ -40,7 +40,7 @@ double UniformDistribution::GetCumulative(const ValueType &x)
   return phiVal / (2.0 * M_PI) * (1.0 - std::cos(thetaVal)) / 2.0;
 }
 
-void UniformDistribution::fit(const SampleType& sample)
+void UniformDistribution::Fit(const SampleType& sample, const std::string& method)
 {
   return;
 }
@@ -62,7 +62,7 @@ void UniformDistribution::Random(SampleType &sample, GeneratorType &generator)
 
 UniformDistribution::ValueType UniformDistribution::GetMean()
 {
-  Rcpp::Rcerr << "The mean is not defined on the sphere." << std::endl;
+  cpp11::stop("The mean is not defined on the sphere.");
 }
 
 double UniformDistribution::GetDistance(Self *otherDistribution)

@@ -14,7 +14,7 @@ public:
   double GetDensity(const ValueType &x);
   double GetLogDensity(const ValueType &x);
   double GetCumulative(const ValueType &x);
-  void Fit(const SampleType &sample, const std::string &method) { return; }
+  void Fit(const SampleType &sample, const std::string &method);
   void Random(SampleType &sample, GeneratorType &generator);
   ValueType GetMean();
   double GetVariance() { return 0.0; }

@@ -46,46 +46,47 @@ static void gauss_legendre(int n, double a, double b, std::vector<double>& x, st
 
 BinghamDistribution::BinghamDistribution()
     {
-        m_MeanDirection = {0.0, 0.0, 1.0};
-        m_ConcentrationParameter = {0.0, 0.0, 0.0};
+        m_MeanAxis = {0.0, 0.0, 1.0};
+        m_ConcentrationParameters = {0.0, 0.0, 0.0};
         m_OrientationMatrix.setIdentity();
         UpdateNormalizationConstant();
     }
 
-void BinghamDistribution::SetMeanDirection(const ValueType &val)
+void BinghamDistribution::SetMeanAxis(const ValueType &val)
 {
     if (!this->BelongsToSupport(val))
-        Rcpp::Rcerr << "The mean axis parameter of the Bingham distribution should be of unit norm." << std::endl;
+    {
+        std::string msg = "The mean axis parameter of the Bingham distribution should be a unit vector but its norm is ";
+        msg += std::to_string(val.norm());
+        msg += ", and the mean direction parameter is ";
+        msg += std::to_string(val[0]);
+        msg += ", ";
+        msg += std::to_string(val[1]);
+        msg += ", ";
+        msg += std::to_string(val[2]);
+        msg += ".";
+        cpp11::message(msg.c_str());
+        cpp11::stop("The mean axis parameter of the Bingham distribution should be of unit norm.");
+    }
 
-    m_MeanDirection[0] = 0.0;
-    m_MeanDirection[1] = 0.0;
-    m_MeanDirection[2] = 1.0;
+    m_MeanAxis[0] = 0.0;
+    m_MeanAxis[1] = 0.0;
+    m_MeanAxis[2] = 1.0;
     // Compute rotation matrix to bring [0,0,1] on meanAxis
     m_NorthToMeanAxisRotationMatrix = anima::GetRotationMatrixFromVectors(m_MeanAxis, val);
     m_MeanAxis = val;
-}
-
-void BinghamDistribution::SetConcentrationParameter(const double& val)
-{
-    m_ConcentrationParameter = val;
-}
-
-BinghamDistribution::ValueType BinghamDistribution::GetMeanDirection() const
-{
-    return m_MeanDirection;
-}
-
-BinghamDistribution::ValueType BinghamDistribution::GetConcentrationParameter() const
-{
-    return m_ConcentrationParameter;
 }
 
 double BinghamDistribution::GetDensity(const ValueType &x)
 {
     if (!BelongsToSupport(x))
         return 0.0;
-    ValueType y = m_OrientationMatrix.transpose() * x;
-    double exponent = m_ConcentrationParameter[0]*y[0]*y[0] + m_ConcentrationParameter[1]*y[1]*y[1] + m_ConcentrationParameter[2]*y[2]*y[2];
+
+    ValueType y = x * m_OrientationMatrix.transpose();
+    double exponent = m_ConcentrationParameters[0] * y[0] * y[0] + 
+        m_ConcentrationParameters[1] * y[1] * y[1] + 
+        m_ConcentrationParameters[2] * y[2] * y[2];
+    
     return std::exp(exponent) / m_NormalizationConstant;
 }
 
@@ -93,8 +94,12 @@ double BinghamDistribution::GetLogDensity(const ValueType &x)
 {
     if (!BelongsToSupport(x))
         throw std::runtime_error("Log-density not defined outside the sphere.");
-    ValueType y = m_OrientationMatrix.transpose() * x;
-    double exponent = m_ConcentrationParameter[0]*y[0]*y[0] + m_ConcentrationParameter[1]*y[1]*y[1] + m_ConcentrationParameter[2]*y[2]*y[2];
+
+    ValueType y = x * m_OrientationMatrix.transpose();
+    double exponent = m_ConcentrationParameters[0] * y[0] * y[0] + 
+        m_ConcentrationParameters[1] * y[1] * y[1] + 
+        m_ConcentrationParameters[2] * y[2] * y[2];
+    
     return exponent - std::log(m_NormalizationConstant);
 }
 
@@ -104,7 +109,7 @@ double BinghamDistribution::GetCumulative(const ValueType &x)
         throw std::runtime_error("CDF not defined outside the sphere.");
 
     // Convert x to spherical coordinates (theta, phi)
-    anima::Vector3 sphCoords;
+    ValueType sphCoords;
     anima::TransformCartesianToSphericalCoordinates(x, sphCoords);
     double theta_max = sphCoords[0];
     double phi_max = sphCoords[1];
@@ -141,8 +146,10 @@ double BinghamDistribution::ComputeNormalizationConstant(int n_theta, int n_phi)
             x[0] = sth * cphi;
             x[1] = sth * sphi;
             x[2] = cth;
-            x = m_OrientationMatrix * x;
-            double expo = m_ConcentrationParameter[0]*x[0]*x[0] + m_ConcentrationParameter[1]*x[1]*x[1] + m_ConcentrationParameter[2]*x[2]*x[2];
+            x = x * m_OrientationMatrix;
+            double expo = m_ConcentrationParameters[0] * x[0] * x[0] + 
+                m_ConcentrationParameters[1] * x[1] * x[1] + 
+                m_ConcentrationParameters[2] * x[2] * x[2];
             norm_const += std::exp(expo) * sth * w_theta[i] * dphi;
         }
     }
@@ -168,107 +175,99 @@ double BinghamDistribution::ComputeCumulativeIntegral(double theta_max, double p
             x[0] = sth * cphi;
             x[1] = sth * sphi;
             x[2] = cth;
-            x = m_OrientationMatrix * x;
-            double expo = m_ConcentrationParameter[0]*x[0]*x[0] + m_ConcentrationParameter[1]*x[1]*x[1] + m_ConcentrationParameter[2]*x[2]*x[2];
+            x = x * m_OrientationMatrix;
+            double expo = m_ConcentrationParameters[0] * x[0] * x[0] + 
+                m_ConcentrationParameters[1] * x[1] * x[1] + 
+                m_ConcentrationParameters[2] * x[2] * x[2];
             cum += std::exp(expo) * sth * w_theta[i] * dphi;
         }
     }
     return cum;
 }
 
-double BinghamDistribution::GetCumulative(const ValueType &x)
-{
-    if (!BelongsToSupport(x))
-        throw std::runtime_error("CDF not defined outside the sphere.");
-
-    // Convert x to spherical coordinates (theta, phi)
-    ValueType sphCoords;
-    anima::TransformCartesianToSphericalCoordinates(x, sphCoords);
-    double theta_max = sphCoords[0];
-    double phi_max = sphCoords[1];
-    // Ensure theta in [0, pi], phi in [0, 2pi]
-    while (theta_max > M_PI)
-        theta_max -= (2.0 * M_PI);
-    while (theta_max < 0)
-        theta_max += (2.0 * M_PI);
-    while (phi_max > 2.0 * M_PI)
-        phi_max -= (2.0 * M_PI);
-    while (phi_max < 0)
-        phi_max += 2.0 * M_PI;
-
-    // Integrate density over (theta in [0, theta_max], phi in [0, phi_max])
-    return ComputeCumulativeIntegral(theta_max, phi_max) / m_NormalizationConstant;
-}
-
+/**
+ * \brief Fit the Bingham distribution to a sample of observations.
+ *
+ * \details Fit the Bingham distribution to a sample of observations. The
+ *          method used is the moment-based estimation method. The principal
+ *          axes of the distribution are obtained by computing the eigenvectors
+ *          of the moment matrix of the sample. The concentration parameters
+ *          are then computed from the eigenvalues of the moment matrix.
+ *
+ * \param sample A numeric matrix of shape n x 3 specifying a sample of size n drawn from the
+ *          Bingham distribution on the 2-sphere.
+ * \param method A string specifying the estimation method. Unused here.
+ */
 void BinghamDistribution::Fit(const SampleType &sample, const std::string &method)
 {
     // Moment-based estimation
-    MatrixType S;
+    RotationMatrixType S;
     S.setZero();
-    for (const auto& x : sample)
-        S += anima::OuterProduct(x, x);
-    S /= static_cast<double>(sample.size());
+    for (unsigned int i = 0;i < sample.rows();++i)
+        S += sample.row(i).transpose() * sample.row(i);
+    S /= static_cast<double>(sample.rows());
 
     // Eigen decomposition
     ValueType eigval;
-    MatrixType eigvec;
-    Eigen::Matrix3d S_eigen;
+    RotationMatrixType eigvec;
+    RotationMatrixType S_eigen;
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
             S_eigen(i, j) = S(i, j); // Copy your matrix to Eigen
 
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigensolver(S_eigen);
+    Eigen::SelfAdjointEigenSolver<RotationMatrixType> eigensolver(S_eigen);
     if (eigensolver.info() != Eigen::Success) {
         throw std::runtime_error("Eigen decomposition failed!");
         }
 
     // Eigenvalues (sorted in increasing order)
-    Eigen::Vector3d evals = eigensolver.eigenvalues();
+    ValueType evals = eigensolver.eigenvalues();
     // Eigenvectors: columns are eigenvectors
-    Eigen::Matrix3d evecs = eigensolver.eigenvectors();
+    RotationMatrixType evecs = eigensolver.eigenvectors();
 
     // Copy back to your types
-    for (int i = 0; i < 3; ++i) eigval[i] = evals(i);
+    for (int i = 0; i < 3; ++i)
+        eigval[i] = evals(i);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
             eigvec(i, j) = evecs(i, j);
 
-    SetMeanDirection(eigvec.getColumn(2));
+    this->SetMeanAxis(eigvec.col(2));
     ValueType z;
     z[0] = std::log(eigval[0]/eigval[2]);
     z[1] = std::log(eigval[1]/eigval[2]);
     z[2] = 0.0;
-    SetConcentrationParameter(z);
+    this->SetConcentrationParameters(z);
 }
 
 void BinghamDistribution::Random(SampleType &sample, GeneratorType &generator)
 {
     // Rejection sampling from uniform sphere
     std::uniform_real_distribution<double> unif(0.0, 1.0);
-    for (auto& x : sample)
-    {
-        while (true)
-        {
-            double u = unif(generator);
-            double v = unif(generator);
-            double theta = 2.0 * M_PI * u;
-            double phi = std::acos(2.0 * v - 1.0);
-            ValueType y;
-            y[0] = std::sin(phi) * std::cos(theta);
-            y[1] = std::sin(phi) * std::sin(theta);
-            y[2] = std::cos(phi);
-            double d = GetDensity(y);
-            double M = 1.0 / m_NormalizationConstant;
-            if (unif(generator) < d / M)
-            {
-                x = y;
-                break;
-            }
-        }
-    }
+    // for (auto& x : sample)
+    // {
+    //     while (true)
+    //     {
+    //         double u = unif(generator);
+    //         double v = unif(generator);
+    //         double theta = 2.0 * M_PI * u;
+    //         double phi = std::acos(2.0 * v - 1.0);
+    //         ValueType y;
+    //         y[0] = std::sin(phi) * std::cos(theta);
+    //         y[1] = std::sin(phi) * std::sin(theta);
+    //         y[2] = std::cos(phi);
+    //         double d = GetDensity(y);
+    //         double M = 1.0 / m_NormalizationConstant;
+    //         if (unif(generator) < d / M)
+    //         {
+    //             x = y;
+    //             break;
+    //         }
+    //     }
+    // }
 }
 
-BinghamDistribution::ValueType BinghamDistribution::GetMean() const
+BinghamDistribution::ValueType BinghamDistribution::GetMean()
 {
     ValueType meanValue;
     meanValue.fill(0.0);
@@ -305,7 +304,7 @@ void BinghamDistribution::UpdateNormalizationConstant()
     // Approximate normalization constant for 3D Bingham with diagonal Z
     // In practice, use numerical integration or lookup tables.
     // Here, use a crude approximation:
-    m_NormalizationConstant = 8.0 * M_PI * std::exp(m_ConcentrationParameter.max());
+    m_NormalizationConstant = 8.0 * M_PI * std::exp(m_ConcentrationParameters.maxCoeff());
 }
 
 bool BinghamDistribution::BelongsToSupport(const ValueType& x) const

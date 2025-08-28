@@ -14,14 +14,7 @@ namespace anima
     {
     public:
     
-      BinghamDistribution()
-      {
-        m_MeanAxis[0] = 0;
-        m_MeanAxis[1] = 0;
-        m_MeanAxis[2] = 1;
-        m_ConcentrationParameter = 1.0;
-        m_RValue = 0.0;
-      }
+      BinghamDistribution();
     
       double GetDensity(const ValueType &x);
       double GetLogDensity(const ValueType &x);
@@ -34,14 +27,14 @@ namespace anima
       void SetMeanAxis(const ValueType &x);
       ValueType GetMeanAxis() { return m_MeanAxis; }
     
-      void SetConcentrationParameter(const double &x);
-      ValueType GetMeanDirection() const;
-      double GetConcentrationParameter() { return m_ConcentrationParameter; }
+      void SetConcentrationParameters(const ValueType &x) { m_ConcentrationParameters = x; }
+      ValueType GetConcentrationParameters() { return m_ConcentrationParameters; }
     
     private:
-      ValueType m_MeanDirection;
-      double m_ConcentrationParameter;
-      MatrixType m_OrientationMatrix; // columns are principal axes
+      ValueType m_MeanAxis;
+      ValueType m_ConcentrationParameters;
+      RotationMatrixType m_OrientationMatrix; // columns are principal axes
+      RotationMatrixType m_NorthToMeanAxisRotationMatrix;
       double m_NormalizationConstant;
       
       void UpdateNormalizationConstant();
@@ -50,9 +43,7 @@ namespace anima
       // Helper for normalization and cumulative
       double ComputeNormalizationConstant(int n_theta = 16, int n_phi = 32) const;
       double ComputeCumulativeIntegral(double theta_max, double phi_max, int n_theta = 16, int n_phi = 32) const;
-};
-
     };
-    
-    } // end of namespace anima
+
+} // end of namespace anima
     

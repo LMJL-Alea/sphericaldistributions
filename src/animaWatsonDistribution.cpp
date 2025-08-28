@@ -119,7 +119,7 @@ void WatsonDistribution::GetQuantile(double p1, double p2, double& theta, double
     for (int i = 0; i < max_iter; ++i)
     {
         mid = 0.5 * (lower + upper);
-        fmid = this->thetacumul(mid) - p1;
+        // fmid = this->thetacumul(mid) - p1; // AST: not defined
 
         if (std::abs(fmid) < tol)
             break;

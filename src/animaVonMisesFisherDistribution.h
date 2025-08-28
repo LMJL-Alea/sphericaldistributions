@@ -32,6 +32,8 @@ public:
   double GetVariance() { return this->GetCovarianceMatrix().trace(); }
   double GetDistance(Self *otherDistribution);
 
+  void GetQuantile(double p1, double p2, double &theta, double &phi);
+
   void SetMeanDirection(const ValueType &x);
   ValueType GetMeanDirection() { return m_MeanDirection; }
 
