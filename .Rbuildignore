@@ -1,2 +1,7 @@
 ^sphericaldistributions\.Rproj$
 ^\.Rproj\.user$
+^data-raw$
+^\.github$
+^README\.Rmd$
+^codecov\.yml$
+^LICENSE\.md$

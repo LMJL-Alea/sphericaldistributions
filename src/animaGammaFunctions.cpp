@@ -6,7 +6,7 @@
 #include <boost/math/special_functions/digamma.hpp>
 #include <boost/math/special_functions/trigamma.hpp>
 
-#include <Rcpp.h>
+#include <cpp11.hpp>
 
 namespace anima
 {
@@ -14,7 +14,7 @@ namespace anima
 double psi_function(unsigned int n)
 {
     if (n < 1)
-        Rcpp::Rcerr << "The Psi function is not defined in 0." << std::endl;
+        cpp11::stop("The Psi function is not defined in 0.");
 
     double resVal = digamma(1.0);
     for (unsigned int i = 1;i < n;++i)

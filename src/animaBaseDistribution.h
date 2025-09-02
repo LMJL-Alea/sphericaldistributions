@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include <Rcpp.h>
-#include <Eigen/Core>
+#include <cpp11.hpp>
+#include <cpp11eigen.hpp>
 
 namespace anima
 {
@@ -23,7 +23,6 @@ public:
 
   BaseDistribution() {}
 
-  virtual bool BelongsToSupport(const ValueType &x) = 0;
   virtual double GetDensity(const ValueType &x) = 0;
   virtual double GetLogDensity(const ValueType &x) = 0;
   virtual double GetCumulative(const ValueType &x) = 0;
@@ -35,6 +34,7 @@ public:
 
 protected:
   double GetEpsilon() { return std::sqrt(std::numeric_limits<double>::epsilon()); }
+  bool BelongsToSupport(const ValueType &x) { return std::abs(x.norm() - 1.0) < this->GetEpsilon(); }
 };
 
 } // end of namespace

@@ -4,11 +4,6 @@
 namespace anima
 {
 
-bool UniformDistribution::BelongsToSupport(const ValueType &x)
-{
-  return std::abs(x.norm() - 1.0) < this->GetEpsilon();
-}
-
 double UniformDistribution::GetDensity(const ValueType &x)
 {
   if (!this->BelongsToSupport(x))
@@ -19,7 +14,7 @@ double UniformDistribution::GetDensity(const ValueType &x)
 double UniformDistribution::GetLogDensity(const ValueType &x)
 {
   if (!this->BelongsToSupport(x))
-    Rcpp::Rcerr << "The log-density is not defined outside the support." << std::endl;
+    cpp11::stop("The log-density is not defined outside the support.");
 
   return -std::log(4.0 * M_PI);
 }
@@ -27,7 +22,7 @@ double UniformDistribution::GetLogDensity(const ValueType &x)
 double UniformDistribution::GetCumulative(const ValueType &x)
 {
   if (!this->BelongsToSupport(x))
-    Rcpp::Rcerr << "The CDF is not defined outside the support." << std::endl;
+    cpp11::stop("The CDF is not defined outside the support.");
 
   ValueType sphCoords;
   anima::TransformCartesianToSphericalCoordinates(x, sphCoords);
