@@ -10,7 +10,12 @@
 coverage](https://codecov.io/gh/LMJL-Alea/sphericaldistributions/graph/badge.svg)](https://app.codecov.io/gh/LMJL-Alea/sphericaldistributions)
 <!-- badges: end -->
 
-The goal of sphericaldistributions is to …
+The goal of sphericaldistributions is to have many different statistical
+distributions on the sphere in one package. It allows to test easily
+multiple distribution when working with a fitting data set. We provide
+methods to compute the MLE, PDF, CDF, random number generation, and
+parameter estimation for each of the distribution, making it easy to
+compare and use each of them.
 
 ## Installation
 
@@ -29,4 +34,9 @@ This is a basic example which shows you how to solve a common problem:
 ``` r
 library(sphericaldistributions)
 ## basic example code
+x <- rwatson(100, c(1, 0, 0), 10)
 ```
+
+## Acknoledgment
+
+This package is based on the Anima library, RRID:SCR_017017.

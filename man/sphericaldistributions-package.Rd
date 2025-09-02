@@ -6,7 +6,7 @@
 \alias{sphericaldistributions-package}
 \title{sphericaldistributions: What the Package Does (One Line, Title Case)}
 \description{
-What the package does (one paragraph).
+This package aims to gather statistical distributions on the sphere, in order to allow a quick and easy way to fit your data to any distribution you like, but also find the best suiting distribution. We provide methods to compute the MLE, PDF, CDF, random number generation, and parameter estimation. We focused on making a lightweight package, with few dependencies. This package depends on the C++ Anima library \url{https://anima.readthedocs.io/en/latest/}, which is a library and set of python scripts for medical image processing.
 }
 \seealso{
 Useful links:
@@ -27,7 +27,7 @@ Authors:
 
 Other contributors:
 \itemize{
-  \item Anima authors [contributor]
+  \item Anima authors (https://anima.irisa.fr/) [contributor, copyright holder]
 }
 
 }
