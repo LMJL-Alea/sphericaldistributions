@@ -1,0 +1,16 @@
+---
+title: "vmf-distribution"
+vignette: >
+  %\VignetteIndexEntry{vmf-distribution}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: '#>'
+---
+
+```{r}
+#| label: setup
+library(sphericaldistributions)
+```
