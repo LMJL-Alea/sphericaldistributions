@@ -5,6 +5,27 @@
 #include "cpp11/declarations.hpp"
 #include <R_ext/Visibility.h>
 
+// distrUniform.cpp
+cpp11::doubles dunisph_impl(const cpp11::doubles_matrix<> & x, bool log);
+extern "C" SEXP _sphericaldistributions_dunisph_impl(SEXP x, SEXP log) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(dunisph_impl(cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles_matrix<> &>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(log)));
+  END_CPP11
+}
+// distrUniform.cpp
+cpp11::doubles punisph_impl(const cpp11::doubles_matrix<> & x);
+extern "C" SEXP _sphericaldistributions_punisph_impl(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(punisph_impl(cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles_matrix<> &>>(x)));
+  END_CPP11
+}
+// distrUniform.cpp
+cpp11::doubles_matrix<> runisph_impl(unsigned int n);
+extern "C" SEXP _sphericaldistributions_runisph_impl(SEXP n) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(runisph_impl(cpp11::as_cpp<cpp11::decay_t<unsigned int>>(n)));
+  END_CPP11
+}
 // distrVMF.cpp
 cpp11::doubles dvmf_impl(const cpp11::doubles_matrix<> & x, const cpp11::doubles & mu, double kappa, bool log);
 extern "C" SEXP _sphericaldistributions_dvmf_impl(SEXP x, SEXP mu, SEXP kappa, SEXP log) {
@@ -64,12 +85,15 @@ extern "C" SEXP _sphericaldistributions_fit_watson_impl(SEXP x) {
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
+    {"_sphericaldistributions_dunisph_impl",    (DL_FUNC) &_sphericaldistributions_dunisph_impl,    2},
     {"_sphericaldistributions_dvmf_impl",       (DL_FUNC) &_sphericaldistributions_dvmf_impl,       4},
     {"_sphericaldistributions_dwatson_impl",    (DL_FUNC) &_sphericaldistributions_dwatson_impl,    4},
     {"_sphericaldistributions_fit_vmf_impl",    (DL_FUNC) &_sphericaldistributions_fit_vmf_impl,    1},
     {"_sphericaldistributions_fit_watson_impl", (DL_FUNC) &_sphericaldistributions_fit_watson_impl, 1},
+    {"_sphericaldistributions_punisph_impl",    (DL_FUNC) &_sphericaldistributions_punisph_impl,    1},
     {"_sphericaldistributions_pvmf_impl",       (DL_FUNC) &_sphericaldistributions_pvmf_impl,       3},
     {"_sphericaldistributions_pwatson_impl",    (DL_FUNC) &_sphericaldistributions_pwatson_impl,    3},
+    {"_sphericaldistributions_runisph_impl",    (DL_FUNC) &_sphericaldistributions_runisph_impl,    1},
     {"_sphericaldistributions_rvmf_impl",       (DL_FUNC) &_sphericaldistributions_rvmf_impl,       3},
     {"_sphericaldistributions_rwatson_impl",    (DL_FUNC) &_sphericaldistributions_rwatson_impl,    3},
     {NULL, NULL, 0}

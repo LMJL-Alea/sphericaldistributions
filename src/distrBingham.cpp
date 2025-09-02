@@ -43,76 +43,71 @@
 //' @export
 //' @rdname Bingham
 // [[Rcpp::export]]
-Eigen::VectorXd dbin(const Eigen::MatrixXd &x,
-                    const Eigen::RowVectorXd &mu,
-                    double kappa,
-                    bool log = false) {
- using distr = anima::BinghamDistribution;
- distr binDistr;
- binDistr.SetMeanDirection(Eigen::RowVector3d(mu));
- binDistr.SetConcentrationParameter(kappa);
- Eigen::Ref<const Eigen::MatrixX3d> xr(x);
- unsigned int n = xr.rows();
- Eigen::VectorXd res(n);
+Eigen::VectorXd dbin(const Eigen::MatrixXd &x, const Eigen::RowVectorXd &mu,
+                     const Eigen::RowVectorXd &kappa, bool log = false) {
+  using distr = anima::BinghamDistribution;
+  distr binDistr;
+  binDistr.SetMeanAxis(Eigen::RowVector3d(mu));
+  binDistr.SetConcentrationParameters(Eigen::RowVector3d(kappa));
+  Eigen::Ref<const Eigen::MatrixX3d> xr(x);
+  unsigned int n = xr.rows();
+  Eigen::VectorXd res(n);
 
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(omp_get_max_threads()) schedule(static)
 #endif
 
- for (unsigned int i = 0;i < n;++i)
- {
-   if (log)
-     res(i) = binDistr.GetLogDensity(xr.row(i));
-   else
-     res(i) = binDistr.GetDensity(xr.row(i));
- }
- return res;
+  for (unsigned int i = 0; i < n; ++i) {
+    if (log)
+      res(i) = binDistr.GetLogDensity(xr.row(i));
+    else
+      res(i) = binDistr.GetDensity(xr.row(i));
+  }
+  return res;
 }
 
 //' @export
 //' @rdname Bingham
 // [[Rcpp::export]]
-Eigen::VectorXd pbin(const Eigen::MatrixXd &x,
-                    const Eigen::RowVectorXd &mu,
-                    double kappa) {
- using distr = anima::BinghamDistribution;
- distr binDistr;
- binDistr.SetMeanDirection(Eigen::RowVector3d(mu));
- binDistr.SetConcentrationParameter(kappa);
- Eigen::Ref<const Eigen::MatrixX3d> xr(x);
- unsigned int n = xr.rows();
- Eigen::VectorXd res(n);
+Eigen::VectorXd pbin(const Eigen::MatrixXd &x, const Eigen::RowVectorXd &mu,
+                     const Eigen::RowVectorXd &kappa) {
+  using distr = anima::BinghamDistribution;
+  distr binDistr;
+  binDistr.SetMeanAxis(Eigen::RowVector3d(mu));
+  binDistr.SetConcentrationParameters(Eigen::RowVector3d(kappa));
+  Eigen::Ref<const Eigen::MatrixX3d> xr(x);
+  unsigned int n = xr.rows();
+  Eigen::VectorXd res(n);
 
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(omp_get_max_threads()) schedule(static)
 #endif
 
- for (unsigned int i = 0;i < n;++i)
-   res(i) = binDistr.GetCumulative(xr.row(i));
- return res;
+  for (unsigned int i = 0; i < n; ++i)
+    res(i) = binDistr.GetCumulative(xr.row(i));
+  return res;
 }
 
 //' @export
 //' @rdname Bingham
 // [[Rcpp::export]]
-Eigen::MatrixXd rbin(unsigned int n,
-                    const Eigen::RowVectorXd &mu,
-                    double kappa) {
- using distr = anima::BinghamDistribution;
- distr binDistr;
- distr::SampleType samples(n, 3);
- binDistr.SetMeanDirection(Eigen::RowVector3d(mu));
- binDistr.SetConcentrationParameter(kappa);
- distr::GeneratorType generator(std::time(0));
- binDistr.Random(samples, generator);
- return samples;
+Eigen::MatrixXd rbin(unsigned int n, const Eigen::RowVectorXd &mu,
+                     Eigen::RowVectorXd &kappa) {
+  using distr = anima::BinghamDistribution;
+  distr binDistr;
+  distr::SampleType samples(n, 3);
+  binDistr.SetMeanAxis(Eigen::RowVector3d(mu));
+  binDistr.SetConcentrationParameters(Eigen::RowVector3d(kappa));
+  distr::GeneratorType generator(std::time(0));
+  binDistr.Random(samples, generator);
+  return samples;
 }
 
 // [[Rcpp::export]]
 Eigen::RowVectorXd mean_bin_impl(const Eigen::MatrixXd &x) {
- using distr = anima::BinghamDistribution;
- distr binDistr;
- Eigen::Ref<const Eigen::MatrixX3d> xr(x);
- binDistr.Fit(xr, "");
- return binDistr.GetMeanDirection();
+  using distr = anima::BinghamDistribution;
+  distr binDistr;
+  Eigen::Ref<const Eigen::MatrixX3d> xr(x);
+  binDistr.Fit(xr, "");
+  return binDistr.GetMeanAxis();
 }
