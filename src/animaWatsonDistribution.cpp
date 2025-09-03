@@ -6,29 +6,27 @@
 
 #include <Eigen/Eigenvalues>
 
-namespace anima
-{
+namespace anima {
 
-void WatsonDistribution::SetMeanAxis(const ValueType &val)
-{
+void WatsonDistribution::SetMeanAxis(const ValueType &val) {
   if (!this->BelongsToSupport(val))
-    cpp11::stop("The mean axis parameter of the Watson distribution should be of unit norm.");
+    cpp11::stop("The mean axis parameter of the Watson distribution should be "
+                "of unit norm.");
 
   m_MeanAxis[0] = 0.0;
   m_MeanAxis[1] = 0.0;
   m_MeanAxis[2] = 1.0;
   // Compute rotation matrix to bring [0,0,1] on meanAxis
-  m_NorthToMeanAxisRotationMatrix = anima::GetRotationMatrixFromVectors(m_MeanAxis, val);
+  m_NorthToMeanAxisRotationMatrix =
+      anima::GetRotationMatrixFromVectors(m_MeanAxis, val);
   m_MeanAxis = val;
 }
 
-void WatsonDistribution::SetConcentrationParameter(const double &val)
-{
+void WatsonDistribution::SetConcentrationParameter(const double &val) {
   m_ConcentrationParameter = val;
 }
 
-double WatsonDistribution::GetDensity(const ValueType &x)
-{
+double WatsonDistribution::GetDensity(const ValueType &x) {
   if (!this->BelongsToSupport(x))
     return 0.0;
 
@@ -37,31 +35,31 @@ double WatsonDistribution::GetDensity(const ValueType &x)
     return 1.0 / (4.0 * M_PI);
 
   // Case 2: k > 0 - Anisotropic distribution on the 2-sphere
-  if (m_ConcentrationParameter > this->GetEpsilon())
-  {
+  if (m_ConcentrationParameter > this->GetEpsilon()) {
     double kappaSqrt = std::sqrt(m_ConcentrationParameter);
     double c = m_MeanAxis.dot(x);
     double inExp = m_ConcentrationParameter * (c * c - 1.0);
-    return kappaSqrt * std::exp(inExp) / (4.0 * M_PI * anima::EvaluateDawsonFunctionNR(kappaSqrt));
+    return kappaSqrt * std::exp(inExp) /
+           (4.0 * M_PI * anima::EvaluateDawsonFunctionNR(kappaSqrt));
   }
 
   // Case 3: k < 0 - Gridle distribution on the 2-sphere
-  double Ck = std::sqrt(-m_ConcentrationParameter / M_PI) / (2.0 * M_PI * std::erf(std::sqrt(-m_ConcentrationParameter)));
+  double Ck = std::sqrt(-m_ConcentrationParameter / M_PI) /
+              (2.0 * M_PI * std::erf(std::sqrt(-m_ConcentrationParameter)));
   double c = m_MeanAxis.dot(x);
   double inExp = m_ConcentrationParameter * c * c;
   return Ck * std::exp(inExp);
 }
 
-double WatsonDistribution::GetLogDensity(const ValueType &x)
-{
+double WatsonDistribution::GetLogDensity(const ValueType &x) {
   if (!this->BelongsToSupport(x))
-    cpp11::stop("The log-density of the Watson distribution is not defined for arguments outside the 2-sphere.");
+    cpp11::stop("The log-density of the Watson distribution is not defined for "
+                "arguments outside the 2-sphere.");
 
   return std::log(this->GetDensity(x));
 }
 
-double WatsonDistribution::GetCumulative(const ValueType &x)
-{
+double WatsonDistribution::GetCumulative(const ValueType &x) {
   if (!this->BelongsToSupport(x))
     cpp11::stop("The CDF is not defined outside the support.");
 
@@ -72,71 +70,74 @@ double WatsonDistribution::GetCumulative(const ValueType &x)
       carCoords[i] += m_NorthToMeanAxisRotationMatrix(j, i) * x[j];
   anima::TransformCartesianToSphericalCoordinates(carCoords, sphCoords);
 
-  double thetaVal = sphCoords[0];
-  while (thetaVal > M_PI)
-    thetaVal -= (2.0 * M_PI);
-  while (thetaVal < 0)
-    thetaVal += (2.0 * M_PI);
-  double phiVal = sphCoords[1];
-  while (phiVal > 2.0 * M_PI)
-    phiVal -= (2.0 * M_PI);
-  while (phiVal < 0)
-    phiVal += 2.0 * M_PI;
+  double thetaVal, phiVal;
+  this->StandardizeSphericalAngles(sphCoords[0], sphCoords[1], thetaVal,
+                                   phiVal);
 
   double phiCumul = phiVal / (2.0 * M_PI);
 
   double cosTheta = std::cos(thetaVal);
   double sqrtKappa = std::sqrt(m_ConcentrationParameter);
   double dawsonValue = anima::EvaluateDawsonIntegral(sqrtKappa, true);
-  double dawsonCosValue = anima::EvaluateDawsonIntegral(sqrtKappa * cosTheta, true);
+  double dawsonCosValue =
+      anima::EvaluateDawsonIntegral(sqrtKappa * cosTheta, true);
   double thetaCumul = dawsonValue;
-  thetaCumul -= cosTheta * std::exp(-m_ConcentrationParameter * (1.0 - cosTheta * cosTheta)) * dawsonCosValue;
+  thetaCumul -=
+      cosTheta *
+      std::exp(-m_ConcentrationParameter * (1.0 - cosTheta * cosTheta)) *
+      dawsonCosValue;
   thetaCumul /= 2.0;
-  thetaCumul /= anima::GetScaledKummerFunctionValue(m_ConcentrationParameter, 0.5, 1.5);
+  thetaCumul /=
+      anima::GetScaledKummerFunctionValue(m_ConcentrationParameter, 0.5, 1.5);
 
   return phiCumul * thetaCumul;
 }
 
-void WatsonDistribution::GetQuantile(double p1, double p2, double& theta, double& phi)
-{
-  // The CDF is expressed as F(phi, theta) = F1(phi)xF2(theta)  
+void WatsonDistribution::GetQuantile(double p1, double p2, double &theta,
+                                     double &phi) {
+  // The CDF is expressed as F(phi, theta) = F1(phi)xF2(theta)
   // Inverse of F1(phi)
-    phi = 2.0 * M_PI * p2;
+  phi = 2.0 * M_PI * p2;
 
-    // Inverse of F2(theta) using bisection
-    double tol = 1e-10;
-    double lower = 0.0;
-    double upper = M_PI;
-    double mid = 0.0;
-    double fmid = 0.0;
+  // Inverse of F2(theta) using bisection
+  double tol = 1e-10;
+  double lower = 0.0;
+  double upper = M_PI;
+  double mid = 0.0;
+  double fmid = 0.0;
 
-    // Safety: clamp p1 to [0,1]
-    if (p1 < 0.0) p1 = 0.0;
-    if (p1 > 1.0) p1 = 1.0;
+  // Safety: clamp p1 to [0,1]
+  if (p1 < 0.0)
+    p1 = 0.0;
+  if (p1 > 1.0)
+    p1 = 1.0;
 
-    // Bisection method
-    int max_iter = 100;
-    for (int i = 0; i < max_iter; ++i)
-    {
-        mid = 0.5 * (lower + upper);
-        // fmid = this->thetacumul(mid) - p1; // AST: not defined
+  // Bisection method
+  int max_iter = 100;
+  for (int i = 0; i < max_iter; ++i) {
+    mid = 0.5 * (lower + upper);
+    // fmid = this->thetacumul(mid) - p1; // AST: not defined
 
-        if (std::abs(fmid) < tol)
-            break;
+    if (std::abs(fmid) < tol)
+      break;
 
-        if (fmid > 0)
-            upper = mid;
-        else
-            lower = mid;
-    }
+    if (fmid > 0)
+      upper = mid;
+    else
+      lower = mid;
+  }
 
-    theta = mid;
+  theta = mid;
 }
 
-double WatsonDistribution::ComputeConcentrationMLE(const double rValue, const double aValue, const double cValue, double &logLik)
-{
-  double bBoundValue = (rValue * cValue - aValue) / (2.0 * rValue * (1.0 - rValue));
-  double rootInValue = 1.0 + (4.0 * (cValue + 1.0) * rValue * (1.0 - rValue)) / (aValue * (cValue - aValue));
+double WatsonDistribution::ComputeConcentrationMLE(const double rValue,
+                                                   const double aValue,
+                                                   const double cValue,
+                                                   double &logLik) {
+  double bBoundValue =
+      (rValue * cValue - aValue) / (2.0 * rValue * (1.0 - rValue));
+  double rootInValue = 1.0 + (4.0 * (cValue + 1.0) * rValue * (1.0 - rValue)) /
+                                 (aValue * (cValue - aValue));
   bBoundValue *= (1.0 + std::sqrt(rootInValue));
 
   double lBoundValue = (rValue * cValue - aValue) / (rValue * (1.0 - rValue));
@@ -151,27 +152,29 @@ double WatsonDistribution::ComputeConcentrationMLE(const double rValue, const do
   if (rValue < aValue / cValue)
     concentrationParameter = (bBoundValue + uBoundValue) / 2.0;
 
-  logLik = concentrationParameter * (rValue - 1.0) - std::log(anima::GetScaledKummerFunctionValue(concentrationParameter, aValue, cValue));
+  logLik = concentrationParameter * (rValue - 1.0) -
+           std::log(anima::GetScaledKummerFunctionValue(concentrationParameter,
+                                                        aValue, cValue));
 
   return concentrationParameter;
 }
 
-void WatsonDistribution::Fit(const SampleType &sample, const std::string &method)
-{
+void WatsonDistribution::Fit(const SampleType &sample,
+                             const std::string &method) {
   /**********************************************************************************************
    * \fn void Fit(std::vector<itk::Vector<double,3>>, std::mt19937 &generator)
    *
-   * \brief	Closed-form approximations of the maximum likelihood estimators for the mean axis
-   *          and the concentration parameter of the Watson distribution using the procedure
-   *          described in Sra & Karp, The multivariate Watson distribution: Maximum-likelihood
-   *          estimation and other aspects, Journal of Multivariate Analysis, 2013, Vol. 114,
-   *          pp. 256-69.
+   * \brief	Closed-form approximations of the maximum likelihood estimators
+   *for the mean axis and the concentration parameter of the Watson distribution
+   *using the procedure described in Sra & Karp, The multivariate Watson
+   *distribution: Maximum-likelihood estimation and other aspects, Journal of
+   *Multivariate Analysis, 2013, Vol. 114, pp. 256-69.
    *
    * \author	Aymeric Stamm
    * \date	October 2023
    *
-   * \param	sample A numeric matrix of shape n x 3 specifying a sample of size n drawn from the
-   *          Watson distribution on the 2-sphere.
+   * \param	sample A numeric matrix of shape n x 3 specifying a sample of
+   *size n drawn from the Watson distribution on the 2-sphere.
    * \param	method A string specifying the estimation method. Unused here.
    **********************************************************************************************/
 
@@ -183,12 +186,9 @@ void WatsonDistribution::Fit(const SampleType &sample, const std::string &method
 
   RotationMatrixType scatterMatrix;
   scatterMatrix.fill(0.0);
-  for (unsigned int i = 0; i < numberOfObservations; ++i)
-  {
-    for (unsigned int j = 0; j < m_AmbientDimension; ++j)
-    {
-      for (unsigned int k = j; k < m_AmbientDimension; ++k)
-      {
+  for (unsigned int i = 0; i < numberOfObservations; ++i) {
+    for (unsigned int j = 0; j < m_AmbientDimension; ++j) {
+      for (unsigned int k = j; k < m_AmbientDimension; ++k) {
         double tmpValue = sample(i, j) * sample(i, k);
         scatterMatrix(j, k) += tmpValue;
         if (j != k)
@@ -206,63 +206,55 @@ void WatsonDistribution::Fit(const SampleType &sample, const std::string &method
   double aValue = 0.5;
   double cValue = static_cast<double>(m_AmbientDimension) / 2.0;
 
-  // Compute estimate of mean axis assuming estimated concentration parameter is positive
+  // Compute estimate of mean axis assuming estimated concentration parameter is
+  // positive
   double bipolarRValue = 0.0;
-  for (unsigned int i = 0; i < m_AmbientDimension; ++i)
-  {
+  for (unsigned int i = 0; i < m_AmbientDimension; ++i) {
     for (unsigned int j = 0; j < m_AmbientDimension; ++j)
       bipolarRValue += eigenVecs(i, 2) * scatterMatrix(i, j) * eigenVecs(j, 2);
   }
 
   double bipolarLogLik;
-  double bipolarKappa = ComputeConcentrationMLE(bipolarRValue, aValue, cValue, bipolarLogLik);
+  double bipolarKappa =
+      ComputeConcentrationMLE(bipolarRValue, aValue, cValue, bipolarLogLik);
   bool bipolarValid = bipolarKappa > 0;
 
-  // Compute estimate of mean axis assuming estimated concentration parameter is negative
+  // Compute estimate of mean axis assuming estimated concentration parameter is
+  // negative
   double gridleRValue = 0.0;
-  for (unsigned int i = 0; i < m_AmbientDimension; ++i)
-  {
+  for (unsigned int i = 0; i < m_AmbientDimension; ++i) {
     for (unsigned int j = 0; j < m_AmbientDimension; ++j)
       gridleRValue += eigenVecs(i, 0) * scatterMatrix(i, j) * eigenVecs(j, 0);
   }
 
   double gridleLogLik;
-  double gridleKappa = ComputeConcentrationMLE(gridleRValue, aValue, cValue, gridleLogLik);
+  double gridleKappa =
+      ComputeConcentrationMLE(gridleRValue, aValue, cValue, gridleLogLik);
   bool gridleValid = gridleKappa < 0;
 
-  if (bipolarValid && gridleValid)
-  {
-    if (gridleLogLik > bipolarLogLik)
-    {
+  if (bipolarValid && gridleValid) {
+    if (gridleLogLik > bipolarLogLik) {
       for (unsigned int i = 0; i < m_AmbientDimension; ++i)
         meanAxis[i] = eigenVecs(i, 0);
       concentrationParameter = gridleKappa;
       m_RValue = gridleRValue;
-    }
-    else
-    {
+    } else {
       for (unsigned int i = 0; i < m_AmbientDimension; ++i)
         meanAxis[i] = eigenVecs(i, 2);
       concentrationParameter = bipolarKappa;
       m_RValue = bipolarRValue;
     }
-  }
-  else if (bipolarValid)
-  {
+  } else if (bipolarValid) {
     for (unsigned int i = 0; i < m_AmbientDimension; ++i)
       meanAxis[i] = eigenVecs(i, 2);
     concentrationParameter = bipolarKappa;
     m_RValue = bipolarRValue;
-  }
-  else if (gridleValid)
-  {
+  } else if (gridleValid) {
     for (unsigned int i = 0; i < m_AmbientDimension; ++i)
       meanAxis[i] = eigenVecs(i, 0);
     concentrationParameter = bipolarKappa;
     m_RValue = gridleRValue;
-  }
-  else
-  {
+  } else {
     concentrationParameter = 0.0;
     m_RValue = gridleRValue;
   }
@@ -273,19 +265,20 @@ void WatsonDistribution::Fit(const SampleType &sample, const std::string &method
   this->SetConcentrationParameter(concentrationParameter);
 }
 
-void WatsonDistribution::Random(SampleType &sample, GeneratorType &generator)
-{
+void WatsonDistribution::Random(SampleType &sample, GeneratorType &generator) {
   /**********************************************************************************************
-   * \fn void Random(std::vector<itk::Vector<double,3>>, std::mt19937 &generator)
+   * \fn void Random(std::vector<itk::Vector<double,3>>, std::mt19937
+   *&generator)
    *
-   * \brief	Sample from the Watson distribution using the procedure described in Fisher et al.,
-   *          Statistical Analysis of Spherical Data, Cambridge University Press, 1993, pp. 59.
+   * \brief	Sample from the Watson distribution using the procedure
+   *described in Fisher et al., Statistical Analysis of Spherical Data,
+   *Cambridge University Press, 1993, pp. 59.
    *
    * \author	Aymeric Stamm
    * \date	October 2013
    *
-   * \param	sample    A numeric matrix of shape n x 3 storing a sample of size n drawn from the
-   *                    Watson distribution on the 2-sphere.
+   * \param	sample    A numeric matrix of shape n x 3 storing a sample of
+   *size n drawn from the Watson distribution on the 2-sphere.
    * \param	generator A pseudo-random number generator.
    **********************************************************************************************/
 
@@ -296,21 +289,23 @@ void WatsonDistribution::Random(SampleType &sample, GeneratorType &generator)
   RealUniformDistributionType distributionValue(0.0, 1.0);
   unsigned int nSamples = sample.rows();
 
-  for (unsigned int i = 0; i < nSamples; ++i)
-  {
-    if (m_ConcentrationParameter > std::sqrt(std::numeric_limits<double>::epsilon())) // Bipolar distribution
+  for (unsigned int i = 0; i < nSamples; ++i) {
+    if (m_ConcentrationParameter >
+        std::sqrt(
+            std::numeric_limits<double>::epsilon())) // Bipolar distribution
     {
       U = distributionValue(generator);
-      S = 1.0 + std::log(U + (1.0 - U) * std::exp(-m_ConcentrationParameter)) / m_ConcentrationParameter;
+      S = 1.0 + std::log(U + (1.0 - U) * std::exp(-m_ConcentrationParameter)) /
+                    m_ConcentrationParameter;
 
       V = distributionValue(generator);
 
-      if (V > 1.0e-6)
-      {
-        while (std::log(V) > m_ConcentrationParameter * S * (S - 1.0))
-        {
+      if (V > 1.0e-6) {
+        while (std::log(V) > m_ConcentrationParameter * S * (S - 1.0)) {
           U = distributionValue(generator);
-          S = 1.0 + std::log(U + (1.0 - U) * std::exp(-m_ConcentrationParameter)) / m_ConcentrationParameter;
+          S = 1.0 +
+              std::log(U + (1.0 - U) * std::exp(-m_ConcentrationParameter)) /
+                  m_ConcentrationParameter;
 
           V = distributionValue(generator);
 
@@ -318,8 +313,10 @@ void WatsonDistribution::Random(SampleType &sample, GeneratorType &generator)
             break;
         }
       }
-    }
-    else if (m_ConcentrationParameter < -std::sqrt(std::numeric_limits<double>::epsilon())) // Gridle distribution
+    } else if (m_ConcentrationParameter <
+               -std::sqrt(
+                   std::numeric_limits<double>::epsilon())) // Gridle
+                                                            // distribution
     {
       double C1 = std::sqrt(std::abs(m_ConcentrationParameter));
       double C2 = std::atan(C1);
@@ -328,15 +325,13 @@ void WatsonDistribution::Random(SampleType &sample, GeneratorType &generator)
       S = (1.0 / C1) * std::tan(C2 * U);
 
       double T = m_ConcentrationParameter * S * S;
-      while (V > (1.0 - T) * std::exp(T))
-      {
+      while (V > (1.0 - T) * std::exp(T)) {
         U = distributionValue(generator);
         V = distributionValue(generator);
         S = (1.0 / C1) * std::tan(C2 * U);
         T = m_ConcentrationParameter * S * S;
       }
-    }
-    else // Uniform distribution
+    } else // Uniform distribution
       S = std::cos(M_PI * distributionValue(generator));
 
     double phi = 2.0 * M_PI * distributionValue(generator);
@@ -358,30 +353,27 @@ void WatsonDistribution::Random(SampleType &sample, GeneratorType &generator)
   }
 }
 
-WatsonDistribution::ValueType WatsonDistribution::GetMean()
-{
+WatsonDistribution::ValueType WatsonDistribution::GetMean() {
   ValueType meanValue;
   meanValue.fill(0.0);
   return meanValue;
 }
 
-RotationMatrixType WatsonDistribution::GetCovarianceMatrix()
-{
+RotationMatrixType WatsonDistribution::GetCovarianceMatrix() {
   /**
    * \fn vnl_matrix<double> WatsonDistribution::GetCovarianceMatrix()
    *
    * \author Aymeric Stamm
    * \date November 2023
    *
-   * \return A numeric matrix of size `m_AmbientDimension x m_AmbientDimension` storing the
-   * covariance matrix of the Watson distribution.
+   * \return A numeric matrix of size `m_AmbientDimension x m_AmbientDimension`
+   * storing the covariance matrix of the Watson distribution.
    */
 
   RotationMatrixType covarianceMatrix;
   covarianceMatrix.fill(0.0);
 
-  if (std::abs(m_ConcentrationParameter) < this->GetEpsilon())
-  {
+  if (std::abs(m_ConcentrationParameter) < this->GetEpsilon()) {
     for (unsigned int i = 0; i < m_AmbientDimension; ++i)
       covarianceMatrix(i, i) = 1.0 / 3.0;
     return covarianceMatrix;
@@ -392,12 +384,16 @@ RotationMatrixType WatsonDistribution::GetCovarianceMatrix()
 
   double sqrtKappa = std::sqrt(m_ConcentrationParameter);
   double dawsonValue = anima::EvaluateDawsonIntegral(sqrtKappa, true);
-  double kummerValue = anima::GetScaledKummerFunctionValue(m_ConcentrationParameter, 0.5, 1.5);
+  double kummerValue =
+      anima::GetScaledKummerFunctionValue(m_ConcentrationParameter, 0.5, 1.5);
 
-  double tmpValue = (1.0 - dawsonValue) / (2.0 * m_ConcentrationParameter * kummerValue);
+  double tmpValue =
+      (1.0 - dawsonValue) / (2.0 * m_ConcentrationParameter * kummerValue);
   tmpMatrix(2, 2) = tmpValue;
 
-  tmpValue = (2.0 * dawsonValue - (1.0 - dawsonValue) / m_ConcentrationParameter) / (4.0 * kummerValue);
+  tmpValue =
+      (2.0 * dawsonValue - (1.0 - dawsonValue) / m_ConcentrationParameter) /
+      (4.0 * kummerValue);
   tmpMatrix(0, 0) = tmpValue;
   tmpMatrix(1, 1) = tmpValue;
 
@@ -405,15 +401,17 @@ RotationMatrixType WatsonDistribution::GetCovarianceMatrix()
     for (unsigned int j = 0; j < m_AmbientDimension; ++j)
       for (unsigned int k = 0; k < m_AmbientDimension; ++k)
         for (unsigned int l = 0; l < m_AmbientDimension; ++l)
-          covarianceMatrix(i, j) += m_NorthToMeanAxisRotationMatrix(i, k) * tmpMatrix(k, l) * m_NorthToMeanAxisRotationMatrix(j, l);
+          covarianceMatrix(i, j) += m_NorthToMeanAxisRotationMatrix(i, k) *
+                                    tmpMatrix(k, l) *
+                                    m_NorthToMeanAxisRotationMatrix(j, l);
 
   return covarianceMatrix;
 }
 
-void WatsonDistribution::GetStandardWatsonSHCoefficients(std::vector<double> &coefficients,
-                                                         std::vector<double> &derivatives)
-{
-  // Computes the first 7 non-zero SH coefficients of the standard Watson PDF (multiplied by 4 M_PI).
+void WatsonDistribution::GetStandardWatsonSHCoefficients(
+    std::vector<double> &coefficients, std::vector<double> &derivatives) {
+  // Computes the first 7 non-zero SH coefficients of the standard Watson PDF
+  // (multiplied by 4 M_PI).
   const unsigned int nbCoefs = 7;
   coefficients.resize(nbCoefs);
   derivatives.resize(nbCoefs);
@@ -446,9 +444,9 @@ void WatsonDistribution::GetStandardWatsonSHCoefficients(std::vector<double> &co
     derivatives[5] = k4 / 138567.0;
     derivatives[6] = 6.0 * k5 / 30421755.0;
 
-    for (unsigned int i = 1; i < nbCoefs; ++i)
-    {
-      double tmpVal = std::pow(2.0, i + 1.0) * sqrtPi / std::sqrt(4.0 * i + 1.0);
+    for (unsigned int i = 1; i < nbCoefs; ++i) {
+      double tmpVal =
+          std::pow(2.0, i + 1.0) * sqrtPi / std::sqrt(4.0 * i + 1.0);
       coefficients[i] *= tmpVal;
       derivatives[i] *= tmpVal;
     }
@@ -457,40 +455,131 @@ void WatsonDistribution::GetStandardWatsonSHCoefficients(std::vector<double> &co
   }
 
   coefficients[1] = (3.0 - (3.0 + 2.0 * k) * dawsonValue) / (2.0 * k);
-  coefficients[2] = (5.0 * (-21.0 + 2.0 * k) + 3.0 * (35.0 + 4.0 * k * (5.0 + k)) * dawsonValue) / (16.0 * k2);
-  coefficients[3] = (21.0 * (165.0 + 4.0 * (-5.0 + k) * k) - 5.0 * (693.0 + 378.0 * k + 84.0 * k2 + 8.0 * k3) * dawsonValue) / (64.0 * k3);
-  coefficients[4] = (3.0 * (-225225.0 + 2.0 * k * (15015.0 + 2.0 * k * (-1925.0 + 62.0 * k))) + 35.0 * (19305.0 + 8.0 * k * (1287.0 + k * (297.0 + 2.0 * k * (18.0 + k)))) * dawsonValue) / (1024.0 * k4);
-  coefficients[5] = (11.0 * (3968055.0 + 8.0 * k * (-69615.0 + 2.0 * k * (9828.0 + k * (-468.0 + 29.0 * k)))) - 63.0 * (692835.0 + 2.0 * k * (182325.0 + 4.0 * k * (10725.0 + 2.0 * k * (715.0 + k * (55.0 + 2.0 * k))))) * dawsonValue) / (4096.0 * k5);
-  coefficients[6] = (13.0 * (-540571185.0 + 2.0 * k * (39171825.0 + 4.0 * k * (-2909907.0 + 2.0 * k * (82467.0 + k * (-7469.0 + 122.0 * k))))) + 231.0 * (30421755.0 + 4.0 * k * (3968055.0 + k * (944775.0 + 4.0 * k * (33150.0 + k * (2925.0 + 4.0 * k * (39.0 + k)))))) * dawsonValue) / (32768.0 * k6);
+  coefficients[2] = (5.0 * (-21.0 + 2.0 * k) +
+                     3.0 * (35.0 + 4.0 * k * (5.0 + k)) * dawsonValue) /
+                    (16.0 * k2);
+  coefficients[3] =
+      (21.0 * (165.0 + 4.0 * (-5.0 + k) * k) -
+       5.0 * (693.0 + 378.0 * k + 84.0 * k2 + 8.0 * k3) * dawsonValue) /
+      (64.0 * k3);
+  coefficients[4] =
+      (3.0 *
+           (-225225.0 + 2.0 * k * (15015.0 + 2.0 * k * (-1925.0 + 62.0 * k))) +
+       35.0 *
+           (19305.0 + 8.0 * k * (1287.0 + k * (297.0 + 2.0 * k * (18.0 + k)))) *
+           dawsonValue) /
+      (1024.0 * k4);
+  coefficients[5] =
+      (11.0 * (3968055.0 +
+               8.0 * k *
+                   (-69615.0 + 2.0 * k * (9828.0 + k * (-468.0 + 29.0 * k)))) -
+       63.0 *
+           (692835.0 +
+            2.0 * k *
+                (182325.0 +
+                 4.0 * k *
+                     (10725.0 + 2.0 * k * (715.0 + k * (55.0 + 2.0 * k))))) *
+           dawsonValue) /
+      (4096.0 * k5);
+  coefficients[6] =
+      (13.0 * (-540571185.0 +
+               2.0 * k *
+                   (39171825.0 +
+                    4.0 * k *
+                        (-2909907.0 +
+                         2.0 * k * (82467.0 + k * (-7469.0 + 122.0 * k))))) +
+       231.0 *
+           (30421755.0 +
+            4.0 * k *
+                (3968055.0 +
+                 k * (944775.0 +
+                      4.0 * k *
+                          (33150.0 + k * (2925.0 + 4.0 * k * (39.0 + k)))))) *
+           dawsonValue) /
+      (32768.0 * k6);
 
-  derivatives[1] = 3.0 * (-1.0 + (-1.0 + 2.0 * k) * dawsonValue + 2.0 * dawsonValue * dawsonValue) / (4.0 * k2);
-  derivatives[2] = 5.0 * ((21.0 - 2.0 * k) + (63.0 + 4.0 * (-11.0 + k) * k) * dawsonValue - 12.0 * (7.0 + 2.0 * k) * dawsonValue * dawsonValue) / (32.0 * k3);
-  derivatives[3] = 21.0 * ((-165.0 - 4.0 * (-5.0 + k) * k) + (-5.0 + 2.0 * k) * (165.0 + 4.0 * (-3.0 + k) * k) * dawsonValue + 10.0 * (99.0 + 4.0 * k * (9.0 + k)) * dawsonValue * dawsonValue) / (128.0 * k4);
-  derivatives[4] = 3.0 * ((225225.0 - 2.0 * k * (15015.0 + 2.0 * k * (-1925.0 + 62.0 * k))) + (1576575.0 + 8.0 * k * (-75075.0 + k * (10395.0 + 2.0 * k * (-978.0 + 31.0 * k)))) * dawsonValue - 840.0 * (2145.0 + 2.0 * k * (429.0 + 66.0 * k + 4.0 * k2)) * dawsonValue * dawsonValue) / (2048.0 * k5);
-  derivatives[5] = 11.0 * ((-3968055.0 - 8.0 * k * (-69615.0 + 2.0 * k * (9828.0 + k * (-468.0 + 29.0 * k)))) + (-35712495.0 + 2.0 * k * (5917275.0 + 8.0 * k * (-118755.0 + k * (21060.0 + k * (-965.0 + 58.0 * k))))) * dawsonValue + 630.0 * (62985.0 + 8.0 * k * (3315.0 + k * (585.0 + 2.0 * k * (26.0 + k)))) * dawsonValue * dawsonValue) / (8192.0 * k6);
-  derivatives[6] = 13.0 * ((540571185.0 - 2.0 * k * (39171825.0 + 4.0 * k * (-2909907.0 + 2.0 * k * (82467.0 + k * (-7469.0 + 122.0 * k))))) + (5946283035.0 + 4.0 * k * (-446558805.0 + k * (79910523.0 + 4.0 * k * (-3322242.0 + k * (187341.0 + 4.0 * k * (-3765.0 + 61.0 * k)))))) * dawsonValue - 2772.0 * (2340135.0 + 2.0 * k * (508725.0 + 4.0 * k * (24225.0 + 2.0 * k * (1275.0 + k * (75.0 + 2.0 * k))))) * dawsonValue * dawsonValue) / (65536.0 * k7);
+  derivatives[1] = 3.0 *
+                   (-1.0 + (-1.0 + 2.0 * k) * dawsonValue +
+                    2.0 * dawsonValue * dawsonValue) /
+                   (4.0 * k2);
+  derivatives[2] =
+      5.0 *
+      ((21.0 - 2.0 * k) + (63.0 + 4.0 * (-11.0 + k) * k) * dawsonValue -
+       12.0 * (7.0 + 2.0 * k) * dawsonValue * dawsonValue) /
+      (32.0 * k3);
+  derivatives[3] =
+      21.0 *
+      ((-165.0 - 4.0 * (-5.0 + k) * k) +
+       (-5.0 + 2.0 * k) * (165.0 + 4.0 * (-3.0 + k) * k) * dawsonValue +
+       10.0 * (99.0 + 4.0 * k * (9.0 + k)) * dawsonValue * dawsonValue) /
+      (128.0 * k4);
+  derivatives[4] =
+      3.0 *
+      ((225225.0 - 2.0 * k * (15015.0 + 2.0 * k * (-1925.0 + 62.0 * k))) +
+       (1576575.0 +
+        8.0 * k * (-75075.0 + k * (10395.0 + 2.0 * k * (-978.0 + 31.0 * k)))) *
+           dawsonValue -
+       840.0 * (2145.0 + 2.0 * k * (429.0 + 66.0 * k + 4.0 * k2)) *
+           dawsonValue * dawsonValue) /
+      (2048.0 * k5);
+  derivatives[5] =
+      11.0 *
+      ((-3968055.0 -
+        8.0 * k * (-69615.0 + 2.0 * k * (9828.0 + k * (-468.0 + 29.0 * k)))) +
+       (-35712495.0 +
+        2.0 * k *
+            (5917275.0 +
+             8.0 * k * (-118755.0 + k * (21060.0 + k * (-965.0 + 58.0 * k))))) *
+           dawsonValue +
+       630.0 *
+           (62985.0 + 8.0 * k * (3315.0 + k * (585.0 + 2.0 * k * (26.0 + k)))) *
+           dawsonValue * dawsonValue) /
+      (8192.0 * k6);
+  derivatives[6] =
+      13.0 *
+      ((540571185.0 -
+        2.0 * k *
+            (39171825.0 +
+             4.0 * k *
+                 (-2909907.0 +
+                  2.0 * k * (82467.0 + k * (-7469.0 + 122.0 * k))))) +
+       (5946283035.0 +
+        4.0 * k *
+            (-446558805.0 +
+             k * (79910523.0 +
+                  4.0 * k *
+                      (-3322242.0 +
+                       k * (187341.0 + 4.0 * k * (-3765.0 + 61.0 * k)))))) *
+           dawsonValue -
+       2772.0 *
+           (2340135.0 +
+            2.0 * k *
+                (508725.0 +
+                 4.0 * k *
+                     (24225.0 + 2.0 * k * (1275.0 + k * (75.0 + 2.0 * k))))) *
+           dawsonValue * dawsonValue) /
+      (65536.0 * k7);
 
-  for (unsigned int i = 1; i < nbCoefs; ++i)
-  {
+  for (unsigned int i = 1; i < nbCoefs; ++i) {
     double sqrtVal = std::sqrt(1.0 + 4.0 * i);
     coefficients[i] *= (sqrtPi * sqrtVal / dawsonValue);
     derivatives[i] *= (sqrtPi * sqrtVal / (dawsonValue * dawsonValue));
   }
 }
 
-double WatsonDistribution::GetDistance(Self *otherDistribution)
-{
+double WatsonDistribution::GetDistance(Self *otherDistribution) {
   const unsigned int numberOfMonteCarloSamples = 10000;
-  SampleType thisWatsonSample(numberOfMonteCarloSamples, 3), otherWatsonSample(numberOfMonteCarloSamples, 3);
+  SampleType thisWatsonSample(numberOfMonteCarloSamples, 3),
+      otherWatsonSample(numberOfMonteCarloSamples, 3);
   GeneratorType generator;
 
   this->Random(thisWatsonSample, generator);
-  WatsonDistribution *watsonDistr = dynamic_cast<WatsonDistribution *>(otherDistribution);
+  WatsonDistribution *watsonDistr =
+      dynamic_cast<WatsonDistribution *>(otherDistribution);
   watsonDistr->Random(otherWatsonSample, generator);
 
   double thisKLValue = 0.0, otherKLValue = 0.0;
-  for (unsigned int i = 0; i < numberOfMonteCarloSamples; ++i)
-  {
+  for (unsigned int i = 0; i < numberOfMonteCarloSamples; ++i) {
     thisKLValue += this->GetLogDensity(thisWatsonSample.row(i));
     thisKLValue -= watsonDistr->GetLogDensity(thisWatsonSample.row(i));
     otherKLValue += watsonDistr->GetLogDensity(otherWatsonSample.row(i));

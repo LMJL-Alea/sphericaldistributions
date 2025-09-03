@@ -96,17 +96,10 @@ double BinghamDistribution::GetCumulative(const ValueType &x) {
   // Convert x to spherical coordinates (theta, phi)
   ValueType sphCoords;
   anima::TransformCartesianToSphericalCoordinates(x, sphCoords);
-  double theta_max = sphCoords[0];
-  double phi_max = sphCoords[1];
-  // Ensure theta in [0, pi], phi in [0, 2pi]
-  while (theta_max > M_PI)
-    theta_max -= 2.0 * M_PI;
-  while (theta_max < 0)
-    theta_max += 2.0 * M_PI;
-  while (phi_max > 2.0 * M_PI)
-    phi_max -= 2.0 * M_PI;
-  while (phi_max < 0)
-    phi_max += 2.0 * M_PI;
+
+  double theta_max, phi_max;
+  this->StandardizeSphericalAngles(sphCoords[0], sphCoords[1], theta_max,
+                                   phi_max);
 
   // Integrate density over (theta in [0, theta_max], phi in [0, phi_max])
   return ComputeCumulativeIntegral(theta_max, phi_max) /

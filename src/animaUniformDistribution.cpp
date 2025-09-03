@@ -22,16 +22,9 @@ double UniformDistribution::GetCumulative(const ValueType &x) {
 
   ValueType sphCoords;
   anima::TransformCartesianToSphericalCoordinates(x, sphCoords);
-  double thetaVal = sphCoords[0];
-  while (thetaVal > M_PI)
-    thetaVal -= (2.0 * M_PI);
-  while (thetaVal < 0)
-    thetaVal += (2.0 * M_PI);
-  double phiVal = sphCoords[1];
-  while (phiVal > 2.0 * M_PI)
-    phiVal -= (2.0 * M_PI);
-  while (phiVal < 0)
-    phiVal += 2.0 * M_PI;
+  double thetaVal, phiVal;
+  this->StandardizeSphericalAngles(sphCoords[0], sphCoords[1], thetaVal,
+                                   phiVal);
 
   return phiVal / (2.0 * M_PI) * (1.0 - std::cos(thetaVal)) / 2.0;
 }
