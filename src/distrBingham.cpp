@@ -1,7 +1,5 @@
 #include "animaBinghamDistribution.h"
 
-#include <ctime>
-
 #include <Eigen/Core>
 
 // directive for openMP
