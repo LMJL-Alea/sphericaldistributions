@@ -40,9 +40,6 @@
 //'
 //' @name Bingham
 
-//' @export
-//' @rdname Bingham
-// [[Rcpp::export]]
 Eigen::VectorXd dbin(const Eigen::MatrixXd &x, const Eigen::RowVectorXd &mu,
                      const Eigen::RowVectorXd &kappa, bool log = false) {
   using distr = anima::BinghamDistribution;
@@ -66,9 +63,6 @@ Eigen::VectorXd dbin(const Eigen::MatrixXd &x, const Eigen::RowVectorXd &mu,
   return res;
 }
 
-//' @export
-//' @rdname Bingham
-// [[Rcpp::export]]
 Eigen::VectorXd pbin(const Eigen::MatrixXd &x, const Eigen::RowVectorXd &mu,
                      const Eigen::RowVectorXd &kappa) {
   using distr = anima::BinghamDistribution;
@@ -88,9 +82,6 @@ Eigen::VectorXd pbin(const Eigen::MatrixXd &x, const Eigen::RowVectorXd &mu,
   return res;
 }
 
-//' @export
-//' @rdname Bingham
-// [[Rcpp::export]]
 Eigen::MatrixXd rbin(unsigned int n, const Eigen::RowVectorXd &mu,
                      Eigen::RowVectorXd &kappa) {
   using distr = anima::BinghamDistribution;
@@ -103,7 +94,6 @@ Eigen::MatrixXd rbin(unsigned int n, const Eigen::RowVectorXd &mu,
   return samples;
 }
 
-// [[Rcpp::export]]
 Eigen::RowVectorXd mean_bin_impl(const Eigen::MatrixXd &x) {
   using distr = anima::BinghamDistribution;
   distr binDistr;
