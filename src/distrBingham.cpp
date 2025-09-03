@@ -1,5 +1,8 @@
 #include "animaBinghamDistribution.h"
 
+#include <cpp11.hpp>
+#include <cpp11eigen.hpp>
+
 #include <Eigen/Core>
 
 // directive for openMP
