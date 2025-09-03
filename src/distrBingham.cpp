@@ -1,7 +1,6 @@
 #include "animaBinghamDistribution.h"
 
-#include <cpp11.hpp>
-#include <cpp11eigen.hpp>
+#include <ctime>
 
 #include <Eigen/Core>
 
