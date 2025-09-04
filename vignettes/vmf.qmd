@@ -1,7 +1,7 @@
 ---
-title: "vmf-distribution"
+title: "The Von-Mises Fisher distribution"
 vignette: >
-  %\VignetteIndexEntry{vmf-distribution}
+  %\VignetteIndexEntry{The Von-Mises Fisher distribution}
   %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 knitr:
@@ -14,3 +14,5 @@ knitr:
 #| label: setup
 library(sphericaldistributions)
 ```
+
+blabla

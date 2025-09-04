@@ -7,3 +7,5 @@
 ^LICENSE\.md$
 ^[.]?air[.]toml$
 ^\.vscode$
+^vignettes/\.quarto$
+^vignettes/*_files$
