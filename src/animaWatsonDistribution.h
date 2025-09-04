@@ -27,6 +27,8 @@ public:
   double GetVariance() { return 1.0 - m_RValue; }
   double GetDistance(Self *otherDistribution);
 
+  void GetQuantile(double p1, double p2, double &theta, double &phi);
+
   void SetMeanAxis(const ValueType &x);
   ValueType GetMeanAxis() { return m_MeanAxis; }
 

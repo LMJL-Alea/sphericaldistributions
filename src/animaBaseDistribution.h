@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ctime>
 #include <limits>
 #include <random>
 #include <string>
@@ -8,11 +9,9 @@
 #include <cpp11.hpp>
 #include <cpp11eigen.hpp>
 
-namespace anima
-{
+namespace anima {
 
-class BaseDistribution
-{
+class BaseDistribution {
 public:
   using Self = BaseDistribution;
   using ValueType = Eigen::RowVector3d;
@@ -33,8 +32,12 @@ public:
   virtual double GetDistance(Self *otherDistribution) = 0;
 
 protected:
-  double GetEpsilon() { return std::sqrt(std::numeric_limits<double>::epsilon()); }
-  bool BelongsToSupport(const ValueType &x) { return std::abs(x.norm() - 1.0) < this->GetEpsilon(); }
+  double GetEpsilon() {
+    return std::sqrt(std::numeric_limits<double>::epsilon());
+  }
+  bool BelongsToSupport(const ValueType &x) {
+    return std::abs(x.norm() - 1.0) < this->GetEpsilon();
+  }
 };
 
-} // end of namespace
+} // namespace anima
